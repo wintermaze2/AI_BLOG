@@ -26,4 +26,12 @@ public final class UrlUtil {
         }
         return sb.toString();
     }
+
+    /**
+     * 쿼리 스트링 값 인코딩(예: 검색어).
+     * 경로와 달리 쿼리에서는 공백을 '+'로 두는 폼 인코딩이 그대로 통용된다.
+     */
+    public static String encodeQueryValue(String value) {
+        return (value == null) ? "" : URLEncoder.encode(value, StandardCharsets.UTF_8);
+    }
 }

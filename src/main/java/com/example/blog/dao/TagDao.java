@@ -121,12 +121,39 @@ public class TagDao {
                 }
             }
 
+            // 3) 이번 변경으로 어느 글에도 붙어있지 않게 된 태그 정리
+            deleteOrphans(con);
+
             con.commit();
         } catch (SQLException e) {
             rollbackQuietly(con);
             throw new RuntimeException("syncPostTags 실패", e);
         } finally {
             closeQuietly(con);
+        }
+    }
+
+    /**
+     * 어느 글에도 연결되지 않은 태그를 삭제한다.
+     * 글 삭제(post_tag는 CASCADE로 정리됨) 직후에도 호출해 고아 태그가 남지 않게 한다.
+     *
+     * @return 삭제된 태그 수
+     */
+    public int deleteOrphans() {
+        try (Connection con = Database.getConnection()) {
+            return deleteOrphans(con);
+        } catch (SQLException e) {
+            throw new RuntimeException("deleteOrphans 실패", e);
+        }
+    }
+
+    /** 호출자가 트랜잭션을 관리하는 경우용. */
+    private int deleteOrphans(Connection con) throws SQLException {
+        String sql = "DELETE t FROM tag t " +
+                     "LEFT JOIN post_tag pt ON pt.tag_id = t.id " +
+                     "WHERE pt.tag_id IS NULL";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            return ps.executeUpdate();
         }
     }
 

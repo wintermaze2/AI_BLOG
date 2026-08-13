@@ -181,7 +181,10 @@ public class AdminServlet extends HttpServlet {
     private void delete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         if (!checkCsrf(req)) { resp.sendError(HttpServletResponse.SC_FORBIDDEN, "CSRF"); return; }
         long id = parseLong(req.getParameter("id"), 0);
-        if (id > 0) postDao.delete(id);
+        if (id > 0) {
+            postDao.delete(id);          // post_tag는 FK CASCADE로 함께 삭제됨
+            tagDao.deleteOrphans();      // 그 결과 어디에도 안 붙은 태그 정리
+        }
         resp.sendRedirect(req.getContextPath() + "/admin");
     }
 

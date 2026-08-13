@@ -14,7 +14,13 @@ a:hover{text-decoration:underline}
 .site-header{border-bottom:1px solid var(--line); background:var(--soft)}
 .site-header .container{display:flex; align-items:center; justify-content:space-between; height:60px}
 .brand{font-weight:800; font-size:1.2rem; color:var(--fg)}
+.site-header nav{display:flex; align-items:center}
 .site-header nav a{margin-left:16px; color:var(--muted); font-size:.95rem}
+.search-form input{width:150px; padding:6px 12px; border:1px solid var(--line); border-radius:999px;
+    background:#fff; font-size:.88rem; font-family:inherit; color:var(--fg)}
+.search-form input:focus{outline:none; border-color:var(--accent); width:190px}
+.search-form input{transition:width .15s ease}
+@media (max-width:560px){ .search-form input{width:110px} .search-form input:focus{width:130px} }
 
 .content{padding:40px 20px 60px; min-height:60vh}
 .page-title{font-size:1.7rem; margin:0 0 28px}

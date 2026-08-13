@@ -5,8 +5,8 @@
 
 <h1 class="page-title">${fn:escapeXml(heading)}</h1>
 
-<%-- 카테고리/태그 아카이브일 때만: 글 수 + 전체 목록으로 돌아가는 링크 --%>
-<c:if test="${not empty archiveKind}">
+<%-- 카테고리/태그/검색 결과일 때만: 글 수 + 전체 목록으로 돌아가는 링크 --%>
+<c:if test="${not empty archiveKind and (archiveKind ne 'search' or not empty query)}">
     <p class="archive-meta">
         글 ${totalCount}건
         · <a href="${pageContext.request.contextPath}/">전체 글 보기</a>
@@ -16,7 +16,20 @@
 <c:choose>
     <c:when test="${empty posts}">
         <p class="empty">
-            ${empty archiveKind ? '아직 발행된 글이 없습니다.' : '이 목록에 해당하는 글이 아직 없습니다.'}
+            <c:choose>
+                <c:when test="${archiveKind eq 'search' and empty query}">
+                    검색어를 입력해 주세요.
+                </c:when>
+                <c:when test="${archiveKind eq 'search'}">
+                    '<c:out value="${query}"/>'에 대한 검색 결과가 없습니다.
+                </c:when>
+                <c:when test="${not empty archiveKind}">
+                    이 목록에 해당하는 글이 아직 없습니다.
+                </c:when>
+                <c:otherwise>
+                    아직 발행된 글이 없습니다.
+                </c:otherwise>
+            </c:choose>
         </p>
     </c:when>
     <c:otherwise>
@@ -45,12 +58,13 @@
         <!-- 페이지네이션 -->
         <c:if test="${totalPages > 1}">
             <nav class="pagination">
+                <%-- pageLinkBase는 검색어 등 유지해야 할 파라미터를 포함한다(예: "?q=tomcat&page=") --%>
                 <c:if test="${page > 1}">
-                    <a href="?page=${page - 1}">← 이전</a>
+                    <a href="${fn:escapeXml(pageLinkBase)}${page - 1}">← 이전</a>
                 </c:if>
                 <span class="page-info">${page} / ${totalPages}</span>
                 <c:if test="${page < totalPages}">
-                    <a href="?page=${page + 1}">다음 →</a>
+                    <a href="${fn:escapeXml(pageLinkBase)}${page + 1}">다음 →</a>
                 </c:if>
             </nav>
         </c:if>

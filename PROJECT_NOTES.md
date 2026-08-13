@@ -37,7 +37,8 @@
         ├ "/"                홈(글 목록, ?page=N)
         ├ "/posts/{slug}"    글 상세
         ├ "/category/{slug}" 카테고리 아카이브(?page=N)
-        └ "/tag/{slug}"      태그 아카이브(?page=N)
+        ├ "/tag/{slug}"      태그 아카이브(?page=N)
+        └ "/search?q=..."    검색 결과(?page=N)
       AdminServlet("/admin/*") ─ 로그인/CRUD (AuthFilter로 보호)
       SitemapServlet("/sitemap.xml"), RssServlet("/rss.xml")
       정적: /static/* , /robots.txt → 컨테이너 default 서블릿 (web.xml)
@@ -75,6 +76,8 @@ blog/
 - `category(id, name, slug)`, `tag(id, name, slug)`, `post_tag`(다대다)
   - 태그는 글 저장 시 `TagDao.syncPostTags()`가 트랜잭션으로 재동기화(기존 연결 삭제 → 태그 upsert → 재연결).
     태그 식별 기준은 **slug** 이므로 "Java"와 "java"는 같은 태그로 합쳐진다.
+  - 어느 글에도 붙지 않게 된 태그는 `TagDao.deleteOrphans()`가 정리한다
+    (태그 동기화 트랜잭션 안에서, 그리고 글 삭제 직후에 호출).
 - `admin_user(id, username, password_hash)` — BCrypt(cost 12)
 - 본문은 `content_md`(원문)와 `content_html`(렌더링본)을 함께 저장 → 조회 시 파싱 비용 0.
 
@@ -88,6 +91,9 @@ blog/
   `DispatcherServlet.decodeSlug()`로 디코딩해야 DB의 slug와 일치한다.
 - `X-Forwarded-Proto` 인식을 위해 Tomcat `server.xml`에 **RemoteIpValve** 설정(프록시 뒤 https 스킴 정확화)
 - 관리자 페이지는 `noindex` + `robots.txt` Disallow
+- **얇은 페이지는 `noindex, follow`**: 검색 결과(`/search`)는 항상, 카테고리/태그 아카이브는
+  결과가 0건일 때. 서블릿이 `noindex` 속성을 세팅하면 header.jsp가 meta 태그를 출력한다.
+  검색 결과에는 canonical도 넣지 않는다.
 
 ## 8. 관리자 기능
 - `/admin/login` 로그인(세션) → `/admin` 목록 → `/admin/new`, `/admin/edit?id=` , save/delete
@@ -127,7 +133,9 @@ bash deployremote.sh         # 로컬 mvn package → scp → 서버 Tomcat 재�
 
 ## 11. TODO / 다음 확장 후보
 - [x] 카테고리/태그별 목록 라우팅 (`/category/{slug}`, `/tag/{slug}`)
-- [ ] 검색 기능
+- [x] 검색 기능 (`/search?q=`) — 제목/요약/본문 LIKE 검색.
+      글이 많아지면 `LIKE '%..%'`가 인덱스를 못 타므로 **FULLTEXT(ngram) 전환** 검토
+      (한글은 기본 파서로 토큰화가 안 되어 `WITH PARSER ngram` 필요)
 - [ ] 댓글, 인기글(조회수) 위젯
 - [ ] DB 다운 시에도 앱 기동되도록 리스너 견고화(HikariCP `initializationFailTimeout`)
 - [ ] 구글 서치 콘솔 등록 + sitemap 제출

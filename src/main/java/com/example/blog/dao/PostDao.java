@@ -107,6 +107,76 @@ public class PostDao {
         return countBySlug(sql, tagSlug, "countPublishedByTag");
     }
 
+    // =================================================================
+    // 검색
+    // =================================================================
+
+    /** 제목/요약/본문(Markdown 원문)을 대상으로 하는 부분 일치 검색 조건. */
+    private static final String SEARCH_WHERE =
+            "WHERE p.status = 'PUBLISHED' AND (" +
+            "      p.title      LIKE ? ESCAPE '\\\\' " +
+            "   OR p.summary    LIKE ? ESCAPE '\\\\' " +
+            "   OR p.content_md LIKE ? ESCAPE '\\\\') ";
+
+    /**
+     * 발행 글 검색(페이징). 제목이 일치하는 글을 먼저 보여주고, 그다음 최신순.
+     *
+     * 규모가 커지면 LIKE '%..%' 는 인덱스를 못 타므로 FULLTEXT(ngram) 전환을 검토할 것.
+     * 현재 글 수 기준에서는 단순 LIKE로 충분하다.
+     */
+    public List<Post> searchPublished(String query, int offset, int limit) {
+        String sql = BASE_SELECT + SEARCH_WHERE +
+                "ORDER BY (p.title LIKE ? ESCAPE '\\\\') DESC, p.published_at DESC " +
+                "LIMIT ? OFFSET ?";
+        String pattern = likePattern(query);
+        List<Post> list = new ArrayList<>();
+        try (Connection con = Database.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, pattern);   // title
+            ps.setString(2, pattern);   // summary
+            ps.setString(3, pattern);   // content_md
+            ps.setString(4, pattern);   // ORDER BY 제목 우선
+            ps.setInt(5, limit);
+            ps.setInt(6, offset);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(map(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("searchPublished 실패", e);
+        }
+        return list;
+    }
+
+    /** 검색 결과 총 개수. */
+    public int countSearchPublished(String query) {
+        String sql = "SELECT COUNT(*) FROM post p " + SEARCH_WHERE;
+        String pattern = likePattern(query);
+        try (Connection con = Database.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, pattern);
+            ps.setString(2, pattern);
+            ps.setString(3, pattern);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("countSearchPublished 실패", e);
+        }
+    }
+
+    /**
+     * 사용자 입력을 LIKE 패턴으로 감싼다.
+     * 값 자체는 PreparedStatement로 바인딩되지만, 입력에 포함된 '%'와 '_'는
+     * 그대로 두면 와일드카드로 동작하므로 이스케이프해야 한다.
+     */
+    private String likePattern(String query) {
+        String escaped = (query == null ? "" : query)
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
+        return "%" + escaped + "%";
+    }
+
     /** 아카이브 목록 공통: (slug, limit, offset) 바인딩 후 매핑. */
     private List<Post> querySlugPaged(String sql, String slug, int offset, int limit, String label) {
         List<Post> list = new ArrayList<>();

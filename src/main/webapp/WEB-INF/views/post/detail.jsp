@@ -13,7 +13,8 @@
         <h1><c:out value="${post.title}"/></h1>
         <div class="post-meta">
             <c:if test="${not empty post.categoryName}">
-                <span class="cat"><c:out value="${post.categoryName}"/></span> ·
+                <a class="cat" href="${pageContext.request.contextPath}/category/${fn:escapeXml(post.categorySlug)}"><c:out
+                        value="${post.categoryName}"/></a> ·
             </c:if>
             <time datetime="${fn:substring(post.publishedAt, 0, 10)}">
                 ${fn:substring(post.publishedAt, 0, 10)}
@@ -31,6 +32,17 @@
     <div class="post-body">
         ${post.contentHtml}
     </div>
+
+    <c:if test="${not empty post.tags}">
+        <ul class="post-tags">
+            <c:forEach var="tag" items="${post.tags}">
+                <li>
+                    <a href="${pageContext.request.contextPath}/tag/${fn:escapeXml(tag.slug)}">#<c:out
+                            value="${tag.name}"/></a>
+                </li>
+            </c:forEach>
+        </ul>
+    </c:if>
 </article>
 
 <p class="back-link">

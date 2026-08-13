@@ -61,6 +61,11 @@
             </label>
         </div>
 
+        <label>태그 (쉼표로 구분, 최대 20개)
+            <input type="text" name="tags" placeholder="예: java, tomcat, seo"
+                   value="${fn:escapeXml(post.tagNames)}">
+        </label>
+
         <label>대표 이미지 URL (선택, og:image)
             <input type="text" name="thumbnailUrl" value="${fn:escapeXml(post.thumbnailUrl)}">
         </label>

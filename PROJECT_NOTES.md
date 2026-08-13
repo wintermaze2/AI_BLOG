@@ -34,8 +34,10 @@
 
 ```
 요청 → DispatcherServlet("/")  ─ 예쁜 URL 라우팅 ─→ DAO → JSP 렌더링
-        ├ "/"               홈(글 목록, ?page=N)
-        └ "/posts/{slug}"   글 상세
+        ├ "/"                홈(글 목록, ?page=N)
+        ├ "/posts/{slug}"    글 상세
+        ├ "/category/{slug}" 카테고리 아카이브(?page=N)
+        └ "/tag/{slug}"      태그 아카이브(?page=N)
       AdminServlet("/admin/*") ─ 로그인/CRUD (AuthFilter로 보호)
       SitemapServlet("/sitemap.xml"), RssServlet("/rss.xml")
       정적: /static/* , /robots.txt → 컨테이너 default 서블릿 (web.xml)
@@ -53,10 +55,10 @@ blog/
     ├── java/com/example/blog/
     │   ├── controller/  DispatcherServlet, AdminServlet, SitemapServlet, RssServlet
     │   ├── filter/      AuthFilter (/admin/* 세션 보호)
-    │   ├── dao/         PostDao, CategoryDao, AdminUserDao
-    │   ├── model/       Post, Category, AdminUser
+    │   ├── dao/         PostDao, CategoryDao, TagDao, AdminUserDao
+    │   ├── model/       Post, Category, Tag, AdminUser
     │   ├── tool/        GenerateHash (BCrypt 해시 생성 CLI)
-    │   └── util/        Database(HikariCP), MarkdownUtil, SlugUtil,
+    │   └── util/        Database(HikariCP), MarkdownUtil, SlugUtil, UrlUtil,
     │                    SiteConfig, PasswordUtil, AppContextListener
     └── webapp/
         ├── WEB-INF/web.xml
@@ -70,7 +72,9 @@ blog/
 - `post(id, slug, title, summary, content_md, content_html, thumbnail_url,
    meta_description, status[DRAFT|PUBLISHED], view_count, category_id,
    created_at, updated_at, published_at)`
-- `category(id, name, slug)`, `tag`, `post_tag`(다대다)
+- `category(id, name, slug)`, `tag(id, name, slug)`, `post_tag`(다대다)
+  - 태그는 글 저장 시 `TagDao.syncPostTags()`가 트랜잭션으로 재동기화(기존 연결 삭제 → 태그 upsert → 재연결).
+    태그 식별 기준은 **slug** 이므로 "Java"와 "java"는 같은 태그로 합쳐진다.
 - `admin_user(id, username, password_hash)` — BCrypt(cost 12)
 - 본문은 `content_md`(원문)와 `content_html`(렌더링본)을 함께 저장 → 조회 시 파싱 비용 0.
 
@@ -78,13 +82,17 @@ blog/
 - 예쁜 URL: `/posts/{slug}` (slug 컬럼)
 - 글마다 `<title>`, `meta description`, `canonical`, Open Graph/Twitter (header.jsp)
 - **JSON-LD(BlogPosting)** 는 `DispatcherServlet.buildJsonLd()` 에서 안전하게 생성해 detail.jsp에 주입
-- 동적 `sitemap.xml`, `rss.xml`
+- 동적 `sitemap.xml`(글 + **발행 글이 있는** 카테고리/태그 아카이브), `rss.xml`
+- slug에 한글이 허용되므로 문서에 박히는 절대 URL(canonical/OG/sitemap/RSS)은 `UrlUtil.encodePath()`로
+  퍼센트 인코딩한다. 반대로 들어오는 요청은 `getRequestURI()`가 인코딩된 원문이라
+  `DispatcherServlet.decodeSlug()`로 디코딩해야 DB의 slug와 일치한다.
 - `X-Forwarded-Proto` 인식을 위해 Tomcat `server.xml`에 **RemoteIpValve** 설정(프록시 뒤 https 스킴 정확화)
 - 관리자 페이지는 `noindex` + `robots.txt` Disallow
 
 ## 8. 관리자 기능
 - `/admin/login` 로그인(세션) → `/admin` 목록 → `/admin/new`, `/admin/edit?id=` , save/delete
 - 본문 입력: EasyMDE(Markdown, CDN), 저장 시 flexmark로 HTML 변환
+- 태그 입력: 쉼표(또는 줄바꿈) 구분 텍스트, 글당 최대 20개. 저장 시 slug로 정규화해 동기화
 - 보안: BCrypt, 세션 CSRF 토큰(save/delete), 로그인 시 `changeSessionId()`
 - **최초 계정 생성**:
   ```bash
@@ -118,7 +126,7 @@ bash deployremote.sh         # 로컬 mvn package → scp → 서버 Tomcat 재�
 - DB 접속 실패 시 현재는 리스너에서 fail-fast (앱 미기동). 필요 시 견고화 여지 있음.
 
 ## 11. TODO / 다음 확장 후보
-- [ ] 카테고리/태그별 목록 라우팅 (`/category/{slug}`, `/tag/{slug}`)
+- [x] 카테고리/태그별 목록 라우팅 (`/category/{slug}`, `/tag/{slug}`)
 - [ ] 검색 기능
 - [ ] 댓글, 인기글(조회수) 위젯
 - [ ] DB 다운 시에도 앱 기동되도록 리스너 견고화(HikariCP `initializationFailTimeout`)

@@ -1,6 +1,8 @@
 package com.example.blog.model;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 글(post) 도메인 객체.
@@ -22,6 +24,8 @@ public class Post {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime publishedAt;
+    /** 연결된 태그. 상세/편집 화면에서만 채운다(목록 조회에서는 비어 있음). */
+    private List<Tag> tags = new ArrayList<>();
 
     public long getId() { return id; }
     public void setId(long id) { this.id = id; }
@@ -70,4 +74,12 @@ public class Post {
 
     public LocalDateTime getPublishedAt() { return publishedAt; }
     public void setPublishedAt(LocalDateTime publishedAt) { this.publishedAt = publishedAt; }
+
+    public List<Tag> getTags() { return tags; }
+    public void setTags(List<Tag> tags) { this.tags = (tags == null) ? new ArrayList<>() : tags; }
+
+    /** 편집 폼용: 태그 이름을 "a, b, c" 형태로 반환. */
+    public String getTagNames() {
+        return tags.stream().map(Tag::getName).collect(java.util.stream.Collectors.joining(", "));
+    }
 }

@@ -3,6 +3,7 @@ package com.example.blog.controller;
 import com.example.blog.dao.AdminUserDao;
 import com.example.blog.dao.CategoryDao;
 import com.example.blog.dao.PostDao;
+import com.example.blog.dao.TagDao;
 import com.example.blog.filter.AuthFilter;
 import com.example.blog.model.AdminUser;
 import com.example.blog.model.Post;
@@ -39,6 +40,7 @@ public class AdminServlet extends HttpServlet {
     private final PostDao postDao = new PostDao();
     private final AdminUserDao adminUserDao = new AdminUserDao();
     private final CategoryDao categoryDao = new CategoryDao();
+    private final TagDao tagDao = new TagDao();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -87,6 +89,7 @@ public class AdminServlet extends HttpServlet {
         long id = parseLong(req.getParameter("id"), 0);
         Post post = postDao.findByIdFull(id);
         if (post == null) { resp.sendError(HttpServletResponse.SC_NOT_FOUND); return; }
+        post.setTags(tagDao.findByPostId(post.getId()));
         ensureCsrf(req);
         req.setAttribute("post", post);
         req.setAttribute("categories", categoryDao.findAll());
@@ -133,6 +136,7 @@ public class AdminServlet extends HttpServlet {
         String meta   = trim(req.getParameter("metaDescription"));
         String status = "PUBLISHED".equals(req.getParameter("status")) ? "PUBLISHED" : "DRAFT";
         Long categoryId = optLong(req.getParameter("categoryId"));
+        List<String> tagNames = TagDao.parseNames(req.getParameter("tags"));
 
         if (title == null || title.isBlank()) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "제목은 필수입니다.");
@@ -162,8 +166,14 @@ public class AdminServlet extends HttpServlet {
             p.setPublishedAt(LocalDateTime.now());
         }
 
-        if (id > 0) postDao.update(p);
-        else        postDao.insert(p);
+        long savedId;
+        if (id > 0) {
+            postDao.update(p);
+            savedId = id;
+        } else {
+            savedId = postDao.insert(p);
+        }
+        if (savedId > 0) tagDao.syncPostTags(savedId, tagNames);
 
         resp.sendRedirect(req.getContextPath() + "/admin");
     }

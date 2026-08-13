@@ -1,8 +1,13 @@
 package com.example.blog.controller;
 
+import com.example.blog.dao.CategoryDao;
 import com.example.blog.dao.PostDao;
+import com.example.blog.dao.TagDao;
+import com.example.blog.model.Category;
 import com.example.blog.model.Post;
+import com.example.blog.model.Tag;
 import com.example.blog.util.SiteConfig;
+import com.example.blog.util.UrlUtil;
 
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -21,6 +26,8 @@ import java.util.List;
 public class SitemapServlet extends HttpServlet {
 
     private final PostDao postDao = new PostDao();
+    private final CategoryDao categoryDao = new CategoryDao();
+    private final TagDao tagDao = new TagDao();
     private static final DateTimeFormatter W3C = DateTimeFormatter.ISO_LOCAL_DATE;
 
     @Override
@@ -37,12 +44,21 @@ public class SitemapServlet extends HttpServlet {
             // 각 글
             for (Post p : posts) {
                 out.println("  <url>");
-                out.println("    <loc>" + esc(base + "/posts/" + p.getSlug()) + "</loc>");
+                out.println("    <loc>" + esc(base + UrlUtil.encodePath("/posts/" + p.getSlug())) + "</loc>");
                 if (p.getUpdatedAt() != null) {
                     out.println("    <lastmod>" + p.getUpdatedAt().format(W3C) + "</lastmod>");
                 }
                 out.println("    <changefreq>weekly</changefreq>");
                 out.println("  </url>");
+            }
+            // 카테고리 / 태그 아카이브 (발행 글이 있는 것만)
+            for (Category c : categoryDao.findAllWithPublishedPosts()) {
+                out.println("  <url><loc>" + esc(base + UrlUtil.encodePath("/category/" + c.getSlug()))
+                        + "</loc><changefreq>weekly</changefreq></url>");
+            }
+            for (Tag t : tagDao.findAllWithPublishedPosts()) {
+                out.println("  <url><loc>" + esc(base + UrlUtil.encodePath("/tag/" + t.getSlug()))
+                        + "</loc><changefreq>weekly</changefreq></url>");
             }
             out.println("</urlset>");
         }

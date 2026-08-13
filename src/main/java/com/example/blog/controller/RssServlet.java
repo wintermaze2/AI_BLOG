@@ -3,6 +3,7 @@ package com.example.blog.controller;
 import com.example.blog.dao.PostDao;
 import com.example.blog.model.Post;
 import com.example.blog.util.SiteConfig;
+import com.example.blog.util.UrlUtil;
 
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -41,7 +42,7 @@ public class RssServlet extends HttpServlet {
             out.println("  <link>" + esc(base) + "/</link>");
             out.println("  <description>" + esc(SiteConfig.siteDescription()) + "</description>");
             for (Post p : posts) {
-                String link = base + "/posts/" + p.getSlug();
+                String link = base + UrlUtil.encodePath("/posts/" + p.getSlug());
                 out.println("  <item>");
                 out.println("    <title>" + esc(p.getTitle()) + "</title>");
                 out.println("    <link>" + esc(link) + "</link>");

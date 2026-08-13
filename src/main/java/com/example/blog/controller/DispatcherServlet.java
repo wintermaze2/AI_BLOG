@@ -1,8 +1,13 @@
 package com.example.blog.controller;
 
+import com.example.blog.dao.CategoryDao;
 import com.example.blog.dao.PostDao;
+import com.example.blog.dao.TagDao;
+import com.example.blog.model.Category;
 import com.example.blog.model.Post;
+import com.example.blog.model.Tag;
 import com.example.blog.util.SiteConfig;
+import com.example.blog.util.UrlUtil;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -11,6 +16,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -19,6 +26,8 @@ import java.util.List;
  *
  *   /                     -> 글 목록(홈), ?page=N 페이징
  *   /posts/{slug}         -> 글 상세
+ *   /category/{slug}      -> 카테고리별 목록, ?page=N 페이징
+ *   /tag/{slug}           -> 태그별 목록, ?page=N 페이징
  *   그 외                  -> 404
  *
  * 정적 리소스(/static/*)는 web.xml에서 컨테이너 default 서블릿이 처리한다.
@@ -28,6 +37,8 @@ public class DispatcherServlet extends HttpServlet {
 
     private static final int PAGE_SIZE = 10;
     private final PostDao postDao = new PostDao();
+    private final CategoryDao categoryDao = new CategoryDao();
+    private final TagDao tagDao = new TagDao();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -44,8 +55,11 @@ public class DispatcherServlet extends HttpServlet {
             if (path.equals("/")) {
                 handleHome(req, resp);
             } else if (path.startsWith("/posts/")) {
-                String slug = path.substring("/posts/".length());
-                handlePostDetail(req, resp, slug);
+                handlePostDetail(req, resp, decodeSlug(path.substring("/posts/".length())));
+            } else if (path.startsWith("/category/")) {
+                handleCategory(req, resp, decodeSlug(path.substring("/category/".length())));
+            } else if (path.startsWith("/tag/")) {
+                handleTag(req, resp, decodeSlug(path.substring("/tag/".length())));
             } else {
                 notFound(req, resp);
             }
@@ -61,16 +75,77 @@ public class DispatcherServlet extends HttpServlet {
         int page = parsePage(req.getParameter("page"));
         int offset = (page - 1) * PAGE_SIZE;
 
-        List<Post> posts = postDao.findPublished(offset, PAGE_SIZE);
-        int total = postDao.countPublished();
+        renderList(req, resp, page,
+                postDao.findPublished(offset, PAGE_SIZE),
+                postDao.countPublished(),
+                SiteConfig.siteName(),                 // h1
+                SiteConfig.siteName(),                 // <title>
+                SiteConfig.siteDescription(),
+                "/");
+    }
+
+    /** /category/{slug} — 카테고리 아카이브. */
+    private void handleCategory(HttpServletRequest req, HttpServletResponse resp, String slug)
+            throws ServletException, IOException {
+        if (slug.isBlank()) { notFound(req, resp); return; }
+
+        Category category = categoryDao.findBySlug(slug);
+        if (category == null) { notFound(req, resp); return; }
+
+        int page = parsePage(req.getParameter("page"));
+        int offset = (page - 1) * PAGE_SIZE;
+
+        req.setAttribute("archiveKind", "category");
+        renderList(req, resp, page,
+                postDao.findPublishedByCategory(slug, offset, PAGE_SIZE),
+                postDao.countPublishedByCategory(slug),
+                category.getName(),
+                category.getName() + " | " + SiteConfig.siteName(),
+                "'" + category.getName() + "' 카테고리의 글 목록입니다.",
+                "/category/" + category.getSlug());
+    }
+
+    /** /tag/{slug} — 태그 아카이브. */
+    private void handleTag(HttpServletRequest req, HttpServletResponse resp, String slug)
+            throws ServletException, IOException {
+        if (slug.isBlank()) { notFound(req, resp); return; }
+
+        Tag tag = tagDao.findBySlug(slug);
+        if (tag == null) { notFound(req, resp); return; }
+
+        int page = parsePage(req.getParameter("page"));
+        int offset = (page - 1) * PAGE_SIZE;
+
+        req.setAttribute("archiveKind", "tag");
+        renderList(req, resp, page,
+                postDao.findPublishedByTag(slug, offset, PAGE_SIZE),
+                postDao.countPublishedByTag(slug),
+                "#" + tag.getName(),
+                tag.getName() + " 태그 | " + SiteConfig.siteName(),
+                "'" + tag.getName() + "' 태그가 붙은 글 목록입니다.",
+                "/tag/" + tag.getSlug());
+    }
+
+    /**
+     * 홈·카테고리·태그가 공유하는 목록 렌더링.
+     *
+     * @param path canonical 계산용 경로(예: "/", "/category/dev"). slug는 인코딩하지 않은 원문.
+     */
+    private void renderList(HttpServletRequest req, HttpServletResponse resp,
+                            int page, List<Post> posts, int total,
+                            String heading, String pageTitle, String metaDescription, String path)
+            throws ServletException, IOException {
+
         int totalPages = Math.max(1, (int) Math.ceil(total / (double) PAGE_SIZE));
 
         req.setAttribute("posts", posts);
         req.setAttribute("page", page);
         req.setAttribute("totalPages", totalPages);
-        req.setAttribute("pageTitle", SiteConfig.siteName());
-        req.setAttribute("metaDescription", SiteConfig.siteDescription());
-        req.setAttribute("canonical", SiteConfig.baseUrl() + "/"
+        req.setAttribute("totalCount", total);
+        req.setAttribute("heading", heading);
+        req.setAttribute("pageTitle", pageTitle);
+        req.setAttribute("metaDescription", metaDescription);
+        req.setAttribute("canonical", SiteConfig.baseUrl() + UrlUtil.encodePath(path)
                 + (page > 1 ? "?page=" + page : ""));
         forward(req, resp, "/WEB-INF/views/post/list.jsp");
     }
@@ -83,12 +158,13 @@ public class DispatcherServlet extends HttpServlet {
         if (post == null) { notFound(req, resp); return; }
 
         postDao.incrementViewCount(post.getId());
+        post.setTags(tagDao.findByPostId(post.getId()));
 
         req.setAttribute("post", post);
         req.setAttribute("pageTitle", post.getTitle() + " | " + SiteConfig.siteName());
         req.setAttribute("metaDescription",
                 post.getMetaDescription() != null ? post.getMetaDescription() : post.getSummary());
-        String url = SiteConfig.baseUrl() + "/posts/" + post.getSlug();
+        String url = SiteConfig.baseUrl() + UrlUtil.encodePath("/posts/" + post.getSlug());
         req.setAttribute("canonical", url);
         req.setAttribute("jsonLd", buildJsonLd(post, url));
         forward(req, resp, "/WEB-INF/views/post/detail.jsp");
@@ -132,6 +208,22 @@ public class DispatcherServlet extends HttpServlet {
         resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
         req.setAttribute("pageTitle", "404 Not Found | " + SiteConfig.siteName());
         forward(req, resp, "/WEB-INF/views/404.jsp");
+    }
+
+    /**
+     * URL 경로 세그먼트를 디코딩한다.
+     * getRequestURI()는 인코딩된 원문을 돌려주므로, 한글 slug는 여기서 풀어야 DB 값과 일치한다.
+     * (SlugUtil이 '+'를 제거하므로 URLDecoder의 '+' -> 공백 변환은 실제 slug에 영향 없음)
+     */
+    private String decodeSlug(String raw) {
+        if (raw == null) return "";
+        String s = raw;
+        while (s.endsWith("/")) s = s.substring(0, s.length() - 1);   // 끝의 슬래시 허용
+        try {
+            return URLDecoder.decode(s, StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException e) {
+            return "";   // 깨진 퍼센트 인코딩 -> 404로 흘려보낸다
+        }
     }
 
     private int parsePage(String raw) {

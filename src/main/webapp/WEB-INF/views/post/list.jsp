@@ -3,11 +3,21 @@
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <jsp:include page="/WEB-INF/views/layout/header.jsp"/>
 
-<h1 class="page-title">${fn:escapeXml(siteName)}</h1>
+<h1 class="page-title">${fn:escapeXml(heading)}</h1>
+
+<%-- 카테고리/태그 아카이브일 때만: 글 수 + 전체 목록으로 돌아가는 링크 --%>
+<c:if test="${not empty archiveKind}">
+    <p class="archive-meta">
+        글 ${totalCount}건
+        · <a href="${pageContext.request.contextPath}/">전체 글 보기</a>
+    </p>
+</c:if>
 
 <c:choose>
     <c:when test="${empty posts}">
-        <p class="empty">아직 발행된 글이 없습니다.</p>
+        <p class="empty">
+            ${empty archiveKind ? '아직 발행된 글이 없습니다.' : '이 목록에 해당하는 글이 아직 없습니다.'}
+        </p>
     </c:when>
     <c:otherwise>
         <ul class="post-list">
@@ -20,7 +30,8 @@
                     </h2>
                     <div class="post-meta">
                         <c:if test="${not empty post.categoryName}">
-                            <span class="cat"><c:out value="${post.categoryName}"/></span> ·
+                            <a class="cat" href="${pageContext.request.contextPath}/category/${fn:escapeXml(post.categorySlug)}"><c:out
+                                    value="${post.categoryName}"/></a> ·
                         </c:if>
                         <time>${fn:substring(post.publishedAt, 0, 10)}</time>
                     </div>

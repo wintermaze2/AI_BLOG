@@ -71,6 +71,72 @@ public class PostDao {
         }
     }
 
+    /** 카테고리별 발행 글 목록(페이징). */
+    public List<Post> findPublishedByCategory(String categorySlug, int offset, int limit) {
+        String sql = BASE_SELECT +
+                "WHERE p.status = 'PUBLISHED' AND c.slug = ? " +
+                "ORDER BY p.published_at DESC " +
+                "LIMIT ? OFFSET ?";
+        return querySlugPaged(sql, categorySlug, offset, limit, "findPublishedByCategory");
+    }
+
+    /** 카테고리별 발행 글 수. */
+    public int countPublishedByCategory(String categorySlug) {
+        String sql = "SELECT COUNT(*) FROM post p JOIN category c ON p.category_id = c.id " +
+                     "WHERE p.status = 'PUBLISHED' AND c.slug = ?";
+        return countBySlug(sql, categorySlug, "countPublishedByCategory");
+    }
+
+    /** 태그별 발행 글 목록(페이징). */
+    public List<Post> findPublishedByTag(String tagSlug, int offset, int limit) {
+        String sql = BASE_SELECT +
+                "JOIN post_tag pt ON pt.post_id = p.id " +
+                "JOIN tag t ON t.id = pt.tag_id " +
+                "WHERE p.status = 'PUBLISHED' AND t.slug = ? " +
+                "ORDER BY p.published_at DESC " +
+                "LIMIT ? OFFSET ?";
+        return querySlugPaged(sql, tagSlug, offset, limit, "findPublishedByTag");
+    }
+
+    /** 태그별 발행 글 수. */
+    public int countPublishedByTag(String tagSlug) {
+        String sql = "SELECT COUNT(*) FROM post p " +
+                     "JOIN post_tag pt ON pt.post_id = p.id " +
+                     "JOIN tag t ON t.id = pt.tag_id " +
+                     "WHERE p.status = 'PUBLISHED' AND t.slug = ?";
+        return countBySlug(sql, tagSlug, "countPublishedByTag");
+    }
+
+    /** 아카이브 목록 공통: (slug, limit, offset) 바인딩 후 매핑. */
+    private List<Post> querySlugPaged(String sql, String slug, int offset, int limit, String label) {
+        List<Post> list = new ArrayList<>();
+        try (Connection con = Database.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, slug);
+            ps.setInt(2, limit);
+            ps.setInt(3, offset);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(map(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(label + " 실패", e);
+        }
+        return list;
+    }
+
+    /** 아카이브 개수 공통: (slug) 바인딩 후 COUNT 반환. */
+    private int countBySlug(String sql, String slug, String label) {
+        try (Connection con = Database.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, slug);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(label + " 실패", e);
+        }
+    }
+
     /** sitemap / RSS 용: 발행 글 전체(간소 필드). */
     public List<Post> findAllPublishedForFeed(int limit) {
         String sql = BASE_SELECT +

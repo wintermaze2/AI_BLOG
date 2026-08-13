@@ -1,0 +1,93 @@
+:root{
+    --fg:#1a1f2b; --muted:#6b7688; --accent:#2f6fed; --line:#e6e9ef; --bg:#ffffff; --soft:#f7f8fb;
+}
+*{box-sizing:border-box}
+body{
+    margin:0; color:var(--fg); background:var(--bg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    line-height:1.75; font-size:17px;
+}
+a{color:var(--accent); text-decoration:none}
+a:hover{text-decoration:underline}
+.container{max-width:760px; margin:0 auto; padding:0 20px}
+
+.site-header{border-bottom:1px solid var(--line); background:var(--soft)}
+.site-header .container{display:flex; align-items:center; justify-content:space-between; height:60px}
+.brand{font-weight:800; font-size:1.2rem; color:var(--fg)}
+.site-header nav a{margin-left:16px; color:var(--muted); font-size:.95rem}
+
+.content{padding:40px 20px 60px; min-height:60vh}
+.page-title{font-size:1.7rem; margin:0 0 28px}
+
+.post-list{list-style:none; margin:0; padding:0}
+.post-item{padding:22px 0; border-bottom:1px solid var(--line)}
+.post-item-title{font-size:1.25rem; margin:0 0 6px}
+.post-meta{color:var(--muted); font-size:.85rem; margin-bottom:8px}
+.post-meta .cat{color:var(--accent); font-weight:600}
+.post-summary{margin:6px 0 0; color:#3c4657}
+
+.pagination{display:flex; align-items:center; gap:16px; justify-content:center; margin-top:36px}
+.page-info{color:var(--muted); font-size:.9rem}
+
+.post-detail .post-header h1{font-size:2rem; line-height:1.3; margin:0 0 10px}
+.post-thumb{width:100%; height:auto; border-radius:10px; margin:18px 0}
+.post-body{margin-top:24px}
+.post-body h1,.post-body h2,.post-body h3{margin-top:1.6em; line-height:1.35}
+.post-body p{margin:1em 0}
+.post-body pre{background:#0f1524; color:#e6ebf5; padding:16px; border-radius:8px; overflow-x:auto; font-size:.9rem}
+.post-body code{font-family:"SF Mono",Menlo,Consolas,monospace; font-size:.92em}
+.post-body :not(pre)>code{background:var(--soft); padding:2px 6px; border-radius:4px}
+.post-body img{max-width:100%; height:auto; border-radius:8px}
+.post-body blockquote{border-left:4px solid var(--line); margin:1em 0; padding:.4em 1em; color:var(--muted)}
+
+.back-link{margin-top:40px}
+.notice{text-align:center; padding:60px 0}
+.notice h1{font-size:3rem; margin:0 0 10px}
+.empty{color:var(--muted)}
+
+.site-footer{border-top:1px solid var(--line); background:var(--soft); color:var(--muted)}
+.site-footer .container{padding:22px 20px; text-align:center; font-size:.85rem}
+
+/* ===================== 관리자(admin) 화면 ===================== */
+body.admin{background:#eef1f6}
+.admin-wrap{max-width:900px; margin:30px auto; padding:0 20px}
+.admin-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; flex-wrap:wrap; gap:12px}
+.admin-header h1{font-size:1.5rem; margin:0}
+.admin-actions{display:flex; gap:8px; flex-wrap:wrap}
+
+.btn{display:inline-block; padding:8px 14px; border-radius:8px; border:1px solid var(--line);
+    background:#fff; color:var(--fg); font-size:.9rem; cursor:pointer; text-decoration:none; line-height:1.2}
+.btn:hover{background:var(--soft); text-decoration:none}
+.btn-primary{background:var(--accent); border-color:var(--accent); color:#fff}
+.btn-primary:hover{filter:brightness(.95); background:var(--accent)}
+.btn-danger{color:#c0392b; border-color:#e6b8b2}
+.btn-danger:hover{background:#fdECEA}
+.btn-sm{padding:5px 10px; font-size:.82rem}
+
+.admin-table{width:100%; border-collapse:collapse; background:#fff; border-radius:10px; overflow:hidden}
+.admin-table th,.admin-table td{padding:12px 14px; border-bottom:1px solid var(--line); text-align:left; font-size:.92rem}
+.admin-table th{background:var(--soft); color:var(--muted); font-weight:600}
+.admin-table .col-title{font-weight:600}
+.admin-table .col-actions{white-space:nowrap; display:flex; gap:6px}
+.badge{display:inline-block; padding:2px 9px; border-radius:999px; font-size:.75rem; font-weight:700}
+.badge-pub{background:#e4f5ec; color:#1b8a54}
+.badge-draft{background:#eef0f4; color:#788196}
+
+/* 로그인 카드 */
+.admin-auth{max-width:360px; margin:8vh auto; background:#fff; padding:34px 30px; border-radius:14px;
+    box-shadow:0 6px 30px rgba(20,30,60,.08)}
+.admin-auth h1{font-size:1.3rem; margin:0 0 20px; text-align:center}
+.admin-auth label,.post-form label{display:block; margin-bottom:14px; font-size:.9rem; color:#40495a; font-weight:600}
+.admin-auth input,.post-form input,.post-form select,.post-form textarea{
+    width:100%; margin-top:6px; padding:10px 12px; border:1px solid #cdd4e0; border-radius:8px;
+    font-size:.95rem; font-family:inherit; font-weight:400; color:var(--fg)}
+.admin-auth button{width:100%; margin-top:6px}
+.admin-back{text-align:center; margin-top:16px; font-size:.85rem}
+.form-error{background:#fdECEA; color:#c0392b; padding:10px 12px; border-radius:8px; font-size:.88rem; margin-bottom:16px}
+
+/* 글 작성 폼 */
+.post-form{background:#fff; padding:26px; border-radius:12px}
+.post-form .form-row{display:flex; gap:16px}
+.post-form .form-row label{flex:1}
+.form-actions{display:flex; gap:10px; margin-top:10px}
+@media (max-width:560px){ .post-form .form-row{flex-direction:column; gap:0} }

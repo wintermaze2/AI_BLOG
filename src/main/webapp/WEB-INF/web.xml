@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
+                             https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+
+    <display-name>Lightweight JSP Blog</display-name>
+
+    <!-- 정적 리소스(/static/*)는 컨테이너 기본 서블릿이 서빙.
+         DispatcherServlet 이 "/" 를 잡아도 정적 파일은 여기로 우회된다. -->
+    <servlet-mapping>
+        <servlet-name>default</servlet-name>
+        <url-pattern>/static/*</url-pattern>
+    </servlet-mapping>
+    <!-- robots.txt / favicon 등 루트 정적 파일도 기본 서블릿이 서빙 (프론트 컨트롤러 우회) -->
+    <servlet-mapping>
+        <servlet-name>default</servlet-name>
+        <url-pattern>/robots.txt</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>default</servlet-name>
+        <url-pattern>/favicon.ico</url-pattern>
+    </servlet-mapping>
+
+    <!-- DispatcherServlet, SitemapServlet, RssServlet, Listener 는 애노테이션으로 등록됨 -->
+
+    <welcome-file-list>
+        <welcome-file>index</welcome-file>
+    </welcome-file-list>
+
+    <session-config>
+        <session-timeout>30</session-timeout>
+    </session-config>
+
+</web-app>

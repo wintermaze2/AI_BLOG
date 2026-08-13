@@ -1,0 +1,40 @@
+# ===== 빌드 산출물 =====
+target/
+*.war
+*.jar
+*.class
+
+# ===== 백업 / 임시 파일 =====
+*.bak
+*.orig
+*.rej
+*~
+*.swp
+
+# ===== 비밀정보 (DB 접속정보는 환경변수로 주입할 것) =====
+.env
+.env.*
+*.pem
+*.key
+setenv.sh
+
+# ===== IDE / 에디터 =====
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+nbproject/private/
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== 로그 =====
+*.log
+logs/

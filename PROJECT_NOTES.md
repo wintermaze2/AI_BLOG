@@ -7,6 +7,8 @@
 - **목적**: 네이버 블로그/워드프레스의 제약 없이 SEO 태그·스크립트·구조화 데이터를 자유롭게 제어하기 위한 **자체 경량 블로그**.
 - **핵심 가치**: 서버사이드 렌더링(JSP)로 SEO 친화, 인프라는 가볍게 유지.
 - **운영 도메인**: https://tech.maillink.co.kr
+- **저장소**: https://github.com/wintermaze2/AI_BLOG (main 브랜치)
+  - ⚠️ 리포지토리 루트는 로컬 작업 폴더(`AI_BLOG/`)가 아니라 **`blogskeleton/blog/`** — 이 파일이 있는 위치입니다.
 
 ## 2. 기술 스택 (2026-08 기준)
 | 구성 | 버전 | 비고 |
@@ -92,11 +94,17 @@ blog/
   ```
 
 ## 9. 빌드 & 배포 워크플로
+**서버에서 빌드** (서버 소스 `~/blog` 기준):
 ```bash
 cd ~/blog
 mvn clean package            # → target/blog.war
 ~/deploy.sh                  # 정지 → ROOT 교체 → 기동 (내부에서 sudo 사용)
 ```
+**로컬에서 빌드 후 원격 배포** (리포지토리에 포함된 `deployremote.sh`, Git Bash에서 실행):
+```bash
+bash deployremote.sh         # 로컬 mvn package → scp → 서버 Tomcat 재배포
+```
+빌드 산출물이 없으면 전송 전에 중단하므로 서버는 그대로 유지됩니다.
 런타임 접속정보는 **환경변수**로 주입 (`/etc/systemd/system/tomcat.service` [Service]):
 `BLOG_DB_URL, BLOG_DB_USER, BLOG_DB_PASS, BLOG_BASE_URL, BLOG_SITE_NAME`
 → 값 변경 시 `sudo systemctl daemon-reload && sudo systemctl restart tomcat`.
@@ -115,4 +123,4 @@ mvn clean package            # → target/blog.war
 - [ ] 댓글, 인기글(조회수) 위젯
 - [ ] DB 다운 시에도 앱 기동되도록 리스너 견고화(HikariCP `initializationFailTimeout`)
 - [ ] 구글 서치 콘솔 등록 + sitemap 제출
-- [ ] Git 버전관리 도입
+- [x] Git 버전관리 도입 (§1 저장소 참고)

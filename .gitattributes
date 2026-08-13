@@ -1,0 +1,24 @@
+# 기본: 텍스트 파일은 자동 판별, 저장소에는 LF로 정규화
+* text=auto
+
+# 셸 스크립트는 반드시 LF (CRLF면 Git Bash/Linux에서 실행 실패)
+*.sh text eol=lf
+
+# Linux 서버에서 소비되는 파일들도 LF 고정
+*.sql  text eol=lf
+*.xml  text eol=lf
+*.java text eol=lf
+*.jsp  text eol=lf
+*.css  text eol=lf
+*.md   text eol=lf
+*.txt  text eol=lf
+
+# 바이너리 (줄바꿈 변환 금지)
+*.war binary
+*.jar binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary

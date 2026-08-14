@@ -1,0 +1,439 @@
+<!--
+  DMARC 글 - 블로그 본문용 조각 (about-dmarc.html 에서 추출)
+
+  관리자 > 새 글 > 본문 형식 "HTML" > 파일 불러오기로 이 파일을 선택하면 됩니다.
+  (확장자가 .html 이므로 형식은 자동으로 HTML 로 전환됩니다)
+
+  원본에서 바뀐 점
+   - <!DOCTYPE>/<html>/<head>/<body>/.wrap 제거 : 블로그 레이아웃이 이미 감싸고 있음
+   - masthead(제목/요약/태그) 제거 : detail.jsp 가 제목·날짜·카테고리·태그를 직접 렌더링함
+                                    → 아래 "폼 입력값"을 관리자 폼에 넣으세요
+   - 모든 선택자를 .post-body 하위로 한정 : 그대로 두면 :root 변수(--muted 등)가
+                                          블로그 전체 색을 덮어씀
+   - 다크모드 블록 제거 : 블로그 본체가 다크모드를 지원하지 않아 본문만 검게 변함
+   - 웹폰트(Noto Sans KR / JetBrains Mono) 제거 : 블로그 기본 폰트 스택 사용
+
+  폼 입력값
+   - 제목      : DMARC에 대하여 알아보기
+   - Slug      : about-dmarc
+   - 요약      : DMARC의 동작 원리와 정책 레코드 작성법, 그리고 메일링크를 이용할 때 필요한 DNS 설정 방법을 정리했습니다.
+   - 메타 설명 : DMARC의 동작 원리와 정책 레코드 작성법, 그리고 메일링크를 이용할 때 필요한 DNS 설정 방법을 정리했습니다.
+   - 태그      : DMARC, SPF, DKIM, 이메일 인증, 발송 신뢰도
+-->
+<style>
+/* ─────────────────────────────────────────────────────────────
+   이 글 전용 스타일. 선택자를 모두 .post-body 하위로 묶어
+   블로그 공통 스타일(style.css)에 영향을 주지 않도록 했습니다.
+   ───────────────────────────────────────────────────────────── */
+.post-body{
+  --ink:#16181d;
+  --ink-soft:#3d444f;
+  --ink-muted:#6b7482;
+  --panel:#f5f6f8;
+  --rule:#e2e5ea;
+  --accent-ink:#1a4fa0;
+  --accent-soft:#eaf0f9;
+  --warn:#8a6100;
+  --warn-soft:#fdf6e6;
+  --warn-rule:#e8c76a;
+  --doc-mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.85;
+  word-break:keep-all;
+  overflow-wrap:break-word;
+}
+.post-body *{box-sizing:border-box}
+
+/* ── 제목 ── */
+.post-body h2{
+  font-size:clamp(20px,3.6vw,26px);
+  line-height:1.4;font-weight:700;letter-spacing:-.01em;
+  margin:64px 0 18px;padding-top:22px;
+  border-top:2px solid var(--ink);
+}
+.post-body h3{
+  font-size:clamp(17px,2.8vw,19px);
+  font-weight:700;margin:40px 0 12px;
+}
+.post-body h3::before{
+  content:'';display:inline-block;
+  width:3px;height:15px;margin-right:9px;
+  background:var(--accent-ink);vertical-align:-2px;
+}
+
+/* ── 본문 ── */
+.post-body p{margin:0 0 18px;color:var(--ink-soft)}
+.post-body strong{color:var(--ink);font-weight:700}
+.post-body a{color:var(--accent-ink);text-underline-offset:3px}
+.post-body a:hover{text-decoration-thickness:2px}
+.post-body ul,.post-body ol{margin:0 0 18px;padding-left:22px;color:var(--ink-soft)}
+.post-body li{margin-bottom:8px}
+.post-body li::marker{color:var(--ink-muted)}
+.post-body hr{border:0;border-top:1px solid var(--rule);margin:44px 0}
+
+/* 인라인 코드.
+   style.css 의 `.post-body :not(pre)>code` 가 더 구체적이라
+   같은 형태로 써야 덮어쓸 수 있습니다(단순한 .post-body code 로는 안 됨). */
+.post-body :not(pre) > code{
+  font-family:var(--doc-mono);font-size:.87em;
+  background:#f0f2f5;
+  color:#1f2937;
+  border:1px solid #dfe3e9;
+  border-radius:0;
+  padding:1px 5px;
+}
+.post-body pre{
+  font-family:var(--doc-mono);font-size:14px;line-height:1.7;
+  background:#1c2128;
+  color:#e9ecf1;
+  border:1px solid #2a3039;
+  border-left:3px solid #6ea8f0;
+  border-radius:0;
+  padding:16px 18px;margin:0 0 20px;
+  overflow-x:auto;
+}
+.post-body pre code{
+  background:none;background-color:transparent;
+  border:0;padding:0;
+  font-size:inherit;
+  color:#e9ecf1;
+}
+
+/* ── 콜아웃 ── */
+.post-body .note{
+  background:var(--accent-soft);
+  border-left:3px solid var(--accent-ink);
+  padding:20px 22px;margin:0 0 24px;
+}
+.post-body .note .note-title{
+  display:block;font-weight:700;color:var(--ink);
+  font-size:14px;letter-spacing:.02em;margin-bottom:10px;
+}
+.post-body .note p:last-child,.post-body .note ul:last-child{margin-bottom:0}
+.post-body .note ul{padding-left:18px}
+.post-body .note.caution{background:var(--warn-soft);border-left-color:var(--warn-rule)}
+.post-body .note.caution .note-title{color:var(--warn)}
+
+/* ── 표 ── */
+.post-body .table-wrap{
+  overflow-x:auto;margin:0 0 24px;
+  border:1px solid var(--rule);
+  -webkit-overflow-scrolling:touch;
+}
+.post-body table{border-collapse:collapse;width:100%;font-size:14.5px;line-height:1.7}
+.post-body th,.post-body td{
+  padding:12px 14px;text-align:left;vertical-align:top;
+  border-bottom:1px solid var(--rule);
+}
+.post-body th{
+  background:var(--panel);font-weight:700;color:var(--ink);
+  font-size:13px;letter-spacing:.02em;white-space:nowrap;
+}
+.post-body td{color:var(--ink-soft)}
+.post-body tr:last-child td{border-bottom:0}
+.post-body td code{white-space:nowrap}
+.post-body .t-tags{min-width:640px}
+.post-body .t-tags td:first-child,.post-body .t-tags th:first-child{white-space:nowrap}
+.post-body .t-tags td:nth-child(3),.post-body .t-tags td:nth-child(4),
+.post-body .t-tags th:nth-child(3),.post-body .t-tags th:nth-child(4){white-space:nowrap}
+.post-body .t-record{min-width:420px}
+.post-body .t-record th:first-child,.post-body .t-record td:first-child{white-space:nowrap;width:32%}
+.post-body .scroll-hint{
+  display:none;font-size:12px;color:var(--ink-muted);
+  margin:-16px 0 24px;
+}
+
+/* ── 마무리 CTA ── */
+.post-body .contact{
+  border-top:1px solid var(--rule);
+  margin-top:56px;padding-top:28px;
+  font-size:15px;color:var(--ink-soft);
+}
+.post-body .cta{
+  margin-top:36px;padding:32px 24px;
+  background:var(--panel);border:1px solid var(--rule);
+  text-align:center;
+}
+.post-body .cta-copy{font-size:14px;color:var(--ink-muted);margin:0 0 18px}
+.post-body .cta-btn{
+  display:inline-flex;align-items:center;gap:10px;
+  background:var(--accent-ink);color:#fff;
+  font-size:15px;font-weight:700;
+  padding:15px 34px;text-decoration:none;
+  border:0;transition:background .15s ease,transform .15s ease;
+}
+.post-body .cta-btn:hover{background:#143d7d;transform:translateY(-1px);text-decoration:none}
+.post-body .cta-btn:focus-visible{outline:3px solid var(--accent-ink);outline-offset:3px}
+.post-body .cta-btn svg{flex:none}
+
+/* ── 모바일 ── */
+@media (max-width:640px){
+  .post-body{font-size:15.5px;line-height:1.8}
+  .post-body h2{margin:48px 0 14px}
+  .post-body pre{font-size:13px;padding:14px}
+  .post-body th,.post-body td{padding:10px 12px;font-size:13.5px}
+  .post-body .scroll-hint{display:block}
+  .post-body .cta{padding:26px 18px}
+  .post-body .cta-btn{width:100%;justify-content:center;padding:16px 20px}
+}
+@media (prefers-reduced-motion:reduce){
+  .post-body .cta-btn{transition:none}
+  .post-body .cta-btn:hover{transform:none}
+}
+@media print{
+  .post-body .cta{display:none}
+}
+</style>
+
+<p>DMARC(Domain-based Message Authentication, Reporting, and Conformance)는 도메인 기반의 메시지 인증·보고·확인 기술입니다. 메일 관리자는 DMARC를 통해 자신이 소유한 이메일 도메인이 피싱이나 스푸핑(보낸사람 주소를 위조하는 공격)에 이용되는 것을 막을 수 있습니다.</p>
+
+<p>DMARC 레코드에는 SPF나 DKIM 인증을 통과하지 못했거나 DMARC가 요구하는 정렬(alignment) 조건을 충족하지 못한 메일을 수신 서버가 어떻게 처리해야 하는지에 대한 지침이 담겨 있습니다. 또한 처리 결과 보고서를 지정한 이메일 주소로 받을 수 있는 방법도 함께 정의합니다.</p>
+
+<div class="note">
+  <span class="note-title">표준 문서 안내</span>
+  <p>DMARC는 2015년 RFC 7489(Informational)로 처음 공개되었고, 2026년 5월 IETF가 이를 대체하는 표준화 트랙 문서 3종을 발행했습니다.</p>
+  <ul>
+    <li><strong>RFC 9989</strong> — DMARC 핵심 프로토콜(정책, 조회, 정렬)</li>
+    <li><strong>RFC 9990</strong> — 집계 보고서(Aggregate Report)</li>
+    <li><strong>RFC 9991</strong> — 실패 보고서(Failure Report)</li>
+  </ul>
+  <p>기존에 운영 중인 <code>v=DMARC1</code> 레코드는 대부분 그대로 유효합니다. 다만 일부 태그가 지원 중단되었으므로 아래 내용을 확인해 주시기 바랍니다.</p>
+</div>
+
+<h2>DMARC는 어떤 기준으로 판정되나요?</h2>
+
+<p>DMARC를 이해할 때 가장 중요한 개념은 <strong>정렬(alignment)</strong> 입니다. DMARC는 SPF나 DKIM 인증이 단순히 성공했는지만 보지 않고, <strong>인증에 사용된 도메인이 수신자에게 보이는 From(보낸사람) 도메인과 일치하는지</strong>를 함께 확인합니다.</p>
+
+<p>DMARC는 다음 두 조건 중 <strong>하나만 충족해도 통과</strong>합니다.</p>
+
+<ol>
+  <li><strong>SPF 통과 + SPF 정렬</strong> — SPF 검사에 사용된 Return-Path(MAIL FROM) 도메인이 From 도메인과 일치</li>
+  <li><strong>DKIM 통과 + DKIM 정렬</strong> — DKIM 서명의 <code>d=</code> 도메인이 From 도메인과 일치</li>
+</ol>
+
+<p>둘 다 실패했을 때 비로소 DMARC 정책(<code>p=</code>)에 따른 조치가 적용됩니다.</p>
+
+<p>정렬 방식은 두 가지입니다.</p>
+
+<ul>
+  <li><strong>relaxed(r)</strong> — 조직 도메인(Organizational Domain)이 같으면 통과합니다. 예를 들어 From이 <code>example.net</code>이고 DKIM <code>d=</code>가 <code>mail.example.net</code>이면 통과합니다. <strong>기본값입니다.</strong></li>
+  <li><strong>strict(s)</strong> — 도메인이 정확히 일치해야 합니다.</li>
+</ul>
+
+<h2>DMARC 설정 이전에 필요한 사전 작업</h2>
+
+<p>DMARC는 SPF(Sender Policy Framework)와 DKIM(DomainKeys Identified Mail)을 기반으로 동작하는 정책이므로, 두 인증 정보가 DNS에 먼저 등록되어 있어야 합니다. SPF나 DKIM 없이 DMARC부터 적용하면 정상적인 메일까지 차단될 수 있습니다.</p>
+
+<p>SPF와 DKIM 등록 과정은 다음 문서를 참조해 주세요.</p>
+
+<!-- 아직 해당 글이 없습니다. 발행 후 /posts/{slug} 형태로 바꿔 주세요.
+     지금 이대로 두면 404 입니다. -->
+<ul>
+  <li><a href="/posts/about-spf">SPF에 대하여 알아보기</a></li>
+  <li><a href="/posts/about-dkim">DKIM에 대하여 알아보기</a></li>
+</ul>
+
+<p>SPF와 DKIM을 등록한 뒤에는 DNS 전파를 고려해 하루 이상 기다린 후 DMARC를 적용하고, 처음에는 <code>p=none</code>으로 시작해 보고서를 확인하면서 단계적으로 정책을 강화하시길 권장합니다.</p>
+
+<h2>DMARC 정책 레코드를 DNS 서버에 등록하기</h2>
+
+<p>DMARC 레코드는 도메인 앞에 <code>_dmarc</code>를 붙인 호스트에 <strong>TXT 타입</strong>으로 등록합니다.</p>
+
+<div class="table-wrap">
+<table class="t-record">
+  <thead><tr><th>항목</th><th>값</th></tr></thead>
+  <tbody>
+    <tr><td>이름(호스트)</td><td><code>_dmarc</code> 또는 <code>_dmarc.example.net</code></td></tr>
+    <tr><td>유형(Record Type)</td><td>TXT</td></tr>
+    <tr><td>값(Value)</td><td><code>v=DMARC1; p=none; rua=mailto:postmaster@example.net; adkim=s; aspf=r</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<p><code>v=DMARC1</code>은 반드시 맨 앞에 와야 하며, 그 뒤의 태그 순서는 자유롭습니다. 각 태그는 세미콜론(<code>;</code>)으로 구분합니다.</p>
+
+<h3>주요 태그</h3>
+
+<div class="table-wrap">
+<table class="t-tags">
+  <thead><tr><th>태그</th><th>입력값 및 설명</th><th>필수</th><th>기본값</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>v</code></td>
+      <td><code>DMARC1</code> 고정값. 가장 먼저 선언되어야 합니다.</td>
+      <td>Y</td><td>–</td>
+    </tr>
+    <tr>
+      <td><code>p</code></td>
+      <td>DMARC를 통과하지 못한 메일에 대해 수신 서버가 취할 조치<br>
+        • <code>none</code> : 별도 조치 없이 정상 수신합니다.<br>
+        • <code>quarantine</code> : 의심 메일로 취급하도록 요청합니다. 대부분 스팸함으로 분류되지만 실제 처리 방식은 수신 서버가 정합니다.<br>
+        • <code>reject</code> : 수신을 거부합니다. 수신 서버는 SMTP 단계에서 거부하고, 반송 메일은 발신 측 서버가 생성합니다.</td>
+      <td>Y</td><td>–</td>
+    </tr>
+    <tr>
+      <td><code>sp</code></td>
+      <td>하위 도메인에서 발송된 메일에 적용할 정책. 값의 의미는 <code>p</code>와 동일합니다.</td>
+      <td>N</td><td><code>p</code> 값을 따름</td>
+    </tr>
+    <tr>
+      <td><code>np</code></td>
+      <td>메일을 발송하지 않는(존재하지 않는) 하위 도메인에 적용할 정책. RFC 9989에서 추가되었습니다.</td>
+      <td>N</td><td><code>sp</code> 또는 <code>p</code></td>
+    </tr>
+    <tr>
+      <td><code>aspf</code></td>
+      <td>From 도메인과 SPF 도메인의 정렬 방식<br>
+        • <code>s</code> : 정확히 일치해야 합니다.<br>
+        • <code>r</code> : 하위 도메인을 허용합니다.</td>
+      <td>N</td><td><code>r</code></td>
+    </tr>
+    <tr>
+      <td><code>adkim</code></td>
+      <td>From 도메인과 DKIM 서명 도메인(<code>d=</code>)의 정렬 방식. 값의 의미는 <code>aspf</code>와 동일합니다.</td>
+      <td>N</td><td><code>r</code></td>
+    </tr>
+    <tr>
+      <td><code>rua</code></td>
+      <td>집계 보고서(Aggregate Report)를 수신할 이메일 주소. 주소 앞에 <code>mailto:</code>를 붙이며, 쉼표(<code>,</code>)로 여러 주소를 지정할 수 있습니다.</td>
+      <td>N</td><td>–</td>
+    </tr>
+    <tr>
+      <td><code>ruf</code></td>
+      <td>실패 보고서(Failure Report)를 수신할 주소. 개인정보 문제로 발송하지 않는 수신 서버가 많습니다.</td>
+      <td>N</td><td>–</td>
+    </tr>
+    <tr>
+      <td><code>fo</code></td>
+      <td>실패 보고서 생성 조건<br>
+        • <code>0</code> : SPF·DKIM 모두 실패 시 (기본값)<br>
+        • <code>1</code> : 둘 중 하나라도 실패 시<br>
+        • <code>d</code> / <code>s</code> : DKIM 또는 SPF 실패 시</td>
+      <td>N</td><td><code>0</code></td>
+    </tr>
+    <tr>
+      <td><code>t</code></td>
+      <td>테스트 모드. <code>t=y</code>이면 수신 서버는 정책을 실제로 적용하지 않고 보고만 합니다. RFC 9989에서 추가되었습니다.</td>
+      <td>N</td><td><code>n</code></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<p class="scroll-hint">← 표를 좌우로 밀어서 보실 수 있습니다.</p>
+
+<h3>지원이 중단된 태그</h3>
+
+<p>RFC 9989에서 다음 태그가 <strong>지원 중단(deprecated)</strong> 되었습니다. 이미 등록되어 있다면 다음 DNS 수정 시 제거하시는 것을 권장합니다.</p>
+
+<div class="table-wrap">
+<table class="t-record">
+  <thead><tr><th>태그</th><th>설명</th></tr></thead>
+  <tbody>
+    <tr><td><code>pct</code></td><td>정책을 적용할 메시지 비율(1~100). 단계적 적용 용도로 쓰였으나 구현 편차가 커 제거되었습니다. 점진적 도입은 <code>t=y</code>로 대체합니다.</td></tr>
+    <tr><td><code>rf</code></td><td>실패 보고서 형식 지정</td></tr>
+    <tr><td><code>ri</code></td><td>집계 보고서 발송 주기 지정</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>보고서를 다른 도메인으로 받을 때</h3>
+
+<p><code>rua</code>나 <code>ruf</code>에 <strong>DMARC 레코드를 등록한 도메인과 다른 도메인의 주소</strong>를 지정하는 경우, 보고서를 받을 쪽 도메인에 수신을 승인하는 레코드가 추가로 필요합니다.</p>
+
+<p>예를 들어 <code>example.net</code>의 보고서를 <code>dmarc@report-service.com</code>으로 받으려면, <code>report-service.com</code> 쪽에 다음 레코드가 있어야 합니다.</p>
+
+<div class="table-wrap">
+<table class="t-record">
+  <thead><tr><th>항목</th><th>값</th></tr></thead>
+  <tbody>
+    <tr><td>이름(호스트)</td><td><code>example.net._report._dmarc.report-service.com</code></td></tr>
+    <tr><td>유형</td><td>TXT</td></tr>
+    <tr><td>값</td><td><code>v=DMARC1</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>이 레코드가 없으면 대부분의 수신 서버는 보고서를 발송하지 않습니다.</p>
+
+<h2>메일링크 이용 시 DMARC 적용 방법</h2>
+
+<p>메일링크는 메일 발송 시 자체적인 SPF·DKIM 정책을 적용하고 있습니다. 다만 이것은 메일링크가 소유권을 가진 도메인에 한해 가능한 작업입니다. 예를 들어 <code>maillink.co.kr</code>로 끝나는 도메인은 메일링크가 소유하고 있으므로 해당 SPF·DKIM 정보를 DNS에 직접 등록할 수 있습니다.</p>
+
+<p>수신 서버는 일반적으로 From 주소와 연결하지 않고 SPF·DKIM 인증만 개별적으로 수행하기 때문에, DMARC를 적용하지 않은 도메인이라면 메일링크에 설정된 정보만으로도 인증 통과에 문제가 없습니다. <strong>그러나 DMARC를 적용하면 정렬 검사가 추가되므로, 고객사 환경에서 별도의 DNS 설정 작업이 필요합니다.</strong></p>
+
+<h3>왜 추가 설정이 필요한가요?</h3>
+
+<p>DMARC의 판정 기준이 되는 도메인은 이메일 헤더의 <strong>From(보낸사람)</strong> 이기 때문입니다.</p>
+
+<p>예를 들어 <code>postmaster@example.net</code>을 보낸사람 주소로 사용해 메일링크로 발송한다고 가정해 보겠습니다.</p>
+
+<ul>
+  <li>DMARC 기준 도메인 : <code>example.net</code></li>
+  <li>SPF·DKIM 검사 도메인 : <code>maillink.co.kr</code></li>
+</ul>
+
+<p>두 도메인이 서로 다르므로 정렬에 실패하고, 결과적으로 DMARC 판정에 실패합니다. 따라서 고객사 도메인인 <code>example.net</code>의 DNS에 메일링크의 SPF·DKIM 정보를 추가해 주어야 합니다.</p>
+
+<h3>1단계 — SPF 레코드에 메일링크 발송 서버 추가</h3>
+
+<p><code>example.net</code>의 SPF 정보가 이미 다음과 같이 설정되어 있다면,</p>
+
+<pre><code>v=spf1 a:mail.example.net ~all</code></pre>
+
+<p>아래와 같이 <code>include:spf.maillink.co.kr</code>을 추가합니다.</p>
+
+<pre><code>v=spf1 a:mail.example.net include:spf.maillink.co.kr ~all</code></pre>
+
+<div class="note">
+  <span class="note-title">Return-Path와 SPF 정렬</span>
+  <p>SPF 정렬은 From이 아니라 <strong>Return-Path(MAIL FROM)</strong> 도메인을 기준으로 판정됩니다. 메일링크는 고객사 DNS에 <code>include:spf.maillink.co.kr</code>이 정상적으로 등록된 경우, <strong>Return-Path를 고객사 도메인 계정으로 사용하도록 지원</strong>하고 있습니다. 따라서 이 설정을 마치면 Return-Path 도메인과 From 도메인이 일치하게 되어 SPF 정렬이 성립합니다.</p>
+</div>
+
+<h3>2단계 — DKIM CNAME 레코드 등록</h3>
+
+<p>DKIM 정렬을 위해 다음 레코드를 DNS에 추가합니다.</p>
+
+<div class="table-wrap">
+<table class="t-record">
+  <thead><tr><th>항목</th><th>값</th></tr></thead>
+  <tbody>
+    <tr><td>이름(호스트)</td><td><code>mlk._domainkey</code> 또는 <code>mlk._domainkey.example.net</code></td></tr>
+    <tr><td>유형(Record Type)</td><td>CNAME</td></tr>
+    <tr><td>값(Value)</td><td><code>dkim.maillink.co.kr</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>이 설정이 적용되면 메일링크는 <code>d=example.net</code>으로 DKIM 서명을 생성하게 되고, From 도메인과 서명 도메인이 일치하여 DKIM 정렬이 성립합니다.</p>
+
+<p>위 두 가지 설정을 마치면 SPF와 DKIM 양쪽 모두 정렬 조건을 충족하므로, <code>p=reject</code>와 같은 엄격한 정책에서도 안정적으로 메일을 발송할 수 있습니다.</p>
+
+<h2>도입 시 권장 절차</h2>
+
+<ol>
+  <li>SPF와 DKIM을 먼저 등록하고 정상 동작을 확인합니다.</li>
+  <li><code>p=none</code>으로 DMARC 레코드를 등록하고 <code>rua</code>로 집계 보고서를 수집합니다.</li>
+  <li>최소 2~4주간 보고서를 확인하며 누락된 발송 시스템이 없는지 점검합니다.</li>
+  <li>문제가 없다면 <code>p=quarantine</code>으로, 이후 <code>p=reject</code>로 단계적으로 강화합니다.</li>
+</ol>
+
+<div class="note caution">
+  <span class="note-title">정책 강화 전 확인하세요</span>
+  <p>메일 발송 경로가 여러 개(사내 메일 서버, 그룹웨어, 마케팅 솔루션 등)라면 모든 경로가 정렬 조건을 충족하는지 확인한 뒤 정책을 강화해야 합니다. 그렇지 않으면 정상적인 업무 메일이 차단될 수 있습니다.</p>
+</div>
+
+<div class="contact">
+  <p>추가적인 문의 사항은 메일링크 고객센터(<strong>1544-9231</strong> 또는 <a href="mailto:help@maillink.co.kr">help@maillink.co.kr</a>)로 연락 주시기 바랍니다.</p>
+</div>
+
+<div class="cta">
+  <p class="cta-copy">SPF·DKIM·DMARC 설정을 지원하는 대량메시징 플랫폼</p>
+  <a class="cta-btn" href="https://www.maillink.co.kr?r=tech">
+    메일링크 바로가기
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
+      <path d="M5 12h14M13 6l6 6-6 6"/>
+    </svg>
+  </a>
+</div>

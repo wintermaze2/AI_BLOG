@@ -56,7 +56,8 @@ blog/
 └── src/main/
     ├── java/com/example/blog/
     │   ├── controller/  DispatcherServlet, AdminServlet, SitemapServlet, RssServlet
-    │   ├── filter/      AdminIpFilter(IP 허용목록), AuthFilter(세션 보호)
+    │   ├── filter/      AdminIpFilter(IP 허용목록), AuthFilter(세션 보호),
+    │   │                SearchRateLimitFilter(/search 속도 제한)
     │   ├── dao/         PostDao, CategoryDao, TagDao, AdminUserDao
     │   ├── model/       Post, Category, Tag, AdminUser
     │   ├── tool/        GenerateHash (BCrypt 해시 생성 CLI)
@@ -139,13 +140,29 @@ bash deployremote.sh         # 로컬 mvn package → scp → 서버 Tomcat 재�
 ```
 빌드 산출물이 없으면 전송 전에 중단하므로 서버는 그대로 유지됩니다.
 런타임 접속정보는 **환경변수**로 주입 (`/etc/systemd/system/tomcat.service` [Service]):
-`BLOG_DB_URL, BLOG_DB_USER, BLOG_DB_PASS, BLOG_BASE_URL, BLOG_SITE_NAME, BLOG_ADMIN_ALLOWED_IPS`
+`BLOG_DB_URL, BLOG_DB_USER, BLOG_DB_PASS, BLOG_BASE_URL, BLOG_SITE_NAME, BLOG_ADMIN_ALLOWED_IPS,
+ BLOG_SEARCH_RATE_PER_MIN, BLOG_SEARCH_RATE_BURST`
 → 값 변경 시 `sudo systemctl daemon-reload && sudo systemctl restart tomcat`.
 미설정 시 `Database.java`/`SiteConfig.java`의 기본값 사용.
 
 ## 10. 코딩 규약 / 주의점
 - **Jakarta 네임스페이스** 필수: `jakarta.servlet.*`, JSTL taglib `jakarta.tags.core` / `jakarta.tags.functions` (구 `javax`/`java.sun.com` URI 사용 금지).
 - 모든 SQL은 **PreparedStatement** (SQL 인젝션 방지).
+- **검색 입력 방어** (`/search`): 세 겹으로 막는다.
+  1. 값 바인딩은 PreparedStatement — SQL 인젝션 차단
+  2. `PostDao.likePattern()` 이 `%`·`_`·`\` 를 이스케이프 — 와일드카드 남용 차단
+     (안 하면 `%` 한 글자로 전체 글을 긁어갈 수 있다)
+  3. 화면 출력은 `<c:out>` / `fn:escapeXml` — XSS 차단
+  검색어는 100자로 자르고, 결과 페이지는 `noindex`.
+  키워드 블랙리스트는 두지 않는다 — 위 세 겹으로 구조적으로 막히고,
+  블랙리스트는 우회는 쉬운 반면 정상 검색어를 막는 부작용이 크다.
+- **검색 속도 제한** (`SearchRateLimitFilter`): 검색은 `LIKE '%..%'` 로 본문 전체를 훑어
+  인덱스를 못 타므로, 짧은 시간에 쏟아지면 그 자체가 서버 부하 공격이 된다.
+  IP별 토큰 버킷으로 제한하고 초과 시 429 + `Retry-After`.
+  - 기본값: 분당 20회, 버스트 10회 → `BLOG_SEARCH_RATE_PER_MIN`, `BLOG_SEARCH_RATE_BURST`
+  - 추적 IP는 2만 개 상한. 넘으면 유휴 항목부터 정리하고, 그래도 넘치면
+    새 IP는 추적하지 않고 통과시킨다(메모리 우선). 추적 중인 IP의 제한은 유지된다.
+  - `RateLimiter` 는 범용 유틸이라 로그인 시도 제한 등에도 재사용할 수 있다.
 - 사용자 입력 출력은 JSP에서 `<c:out>` / `fn:escapeXml` (XSS 방지). 단 `content_html`은 관리자 작성 신뢰 HTML이라 그대로 출력.
 - **폰트**: 본문 Noto Sans KR, 코드 JetBrains Mono (Google Fonts).
   - 로딩은 `layout/fonts.jsp` 한 곳에서만 하고, `<head>`를 직접 가진 화면

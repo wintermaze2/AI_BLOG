@@ -89,6 +89,34 @@ a:hover{text-decoration:underline}
 .post-body img{max-width:100%; height:auto; border-radius:8px}
 .post-body blockquote{border-left:4px solid var(--line); margin:1em 0; padding:.4em 1em; color:var(--muted)}
 
+/* 본문 표 공통 스타일.
+   기본값이 없으면 글마다 표 CSS를 다시 만들어야 해서 여기에 둔다.
+   - 가로 스크롤은 <div class="table-wrap"> 으로 감싸야 동작한다(모바일에서 표가 넘침)
+   - 열이 많아 칸이 뭉개지면 <table class="table-wide"> 를 준다 */
+.post-body .table-wrap{
+    overflow-x:auto; margin:1.6em 0; border:1px solid var(--line);
+    -webkit-overflow-scrolling:touch}
+.post-body .table-wrap table{margin:0}          /* 테두리 상자 안에서는 바깥 여백 제거 */
+.post-body table{
+    border-collapse:collapse; width:100%; margin:1.6em 0;
+    font-size:.9rem; line-height:1.7}
+.post-body table.table-wide{min-width:640px}
+.post-body th,.post-body td{
+    padding:12px 14px; text-align:left; vertical-align:top;
+    border-bottom:1px solid var(--line)}
+.post-body th{
+    background:var(--soft); color:var(--fg); font-weight:700;
+    font-size:.82rem; letter-spacing:.02em; white-space:nowrap}
+.post-body td{color:#3c4657}
+.post-body tr:last-child td{border-bottom:0}
+.post-body td code{white-space:nowrap}
+/* 표가 잘렸을 때 표 아래에 두는 안내문. 좁은 화면에서만 보인다. */
+.post-body .scroll-hint{display:none; font-size:.8rem; color:var(--muted); margin:-1.1em 0 1.6em}
+@media (max-width:640px){
+    .post-body th,.post-body td{padding:10px 12px; font-size:.85rem}
+    .post-body .scroll-hint{display:block}
+}
+
 .back-link{margin-top:40px}
 .notice{text-align:center; padding:60px 0}
 .notice h1{font-size:3rem; margin:0 0 10px}

@@ -52,10 +52,18 @@ LLM에게 그냥 "HTML로 만들어줘" 라고 하면 <!DOCTYPE html> 부터 시
     글꼴을 지정할 일이 있으면 var(--sans) / var(--mono) 를 쓰세요.
 
 [표]
-12. 블로그에는 표(table) 기본 스타일이 없습니다. 표를 쓰려면 스타일을 직접 넣으세요.
-13. 표는 가로 스크롤 컨테이너로 감싸세요. 모바일에서 넘칩니다.
-      <div class="table-wrap"><table> ... </table></div>
-    그리고 .post-body .table-wrap { overflow-x:auto } 를 스타일에 포함하세요.
+12. 표 스타일은 블로그가 이미 갖고 있습니다. 직접 만들지 마세요.
+    표는 아래처럼 감싸기만 하면 됩니다. 감싸야 모바일에서 가로 스크롤이 됩니다.
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>항목</th><th>값</th></tr></thead>
+          <tbody><tr><td>...</td><td>...</td></tr></tbody>
+        </table>
+      </div>
+13. 열이 4개 이상이라 칸이 뭉개질 것 같으면 <table class="table-wide"> 로 쓰세요.
+    최소 너비가 생겨 좁은 화면에서 찌그러지지 않고 가로 스크롤됩니다.
+    표 바로 아래에 안내문을 넣어 두면 모바일에서만 표시됩니다(선택).
+      <p class="scroll-hint">← 표를 좌우로 밀어서 보실 수 있습니다.</p>
 
 [코드/이미지/링크]
 14. 코드 블록은 <pre><code> ... </code></pre> 로 감싸고,
@@ -159,9 +167,12 @@ LLM에게 그냥 "HTML로 만들어줘" 라고 하면 <!DOCTYPE html> 부터 시
   code          고정폭 글꼴 + 회색 배경 (pre 안에서는 배경 없음)
   img           최대 너비 100%, 모서리 둥글게
   blockquote    왼쪽 세로선 인용
+  table         머리행 배경, 행 구분선, 좁은 화면에서 글자·여백 축소
+                .table-wrap  으로 감싸면 가로 스크롤 (표 쓸 때 항상 권장)
+                .table-wide  최소 너비 640px, 열이 많은 표에
+                .scroll-hint 표 아래 안내문, 좁은 화면에서만 표시
 
 --- 스타일이 없는 요소 (필요하면 직접 넣어야 함) ---
-  table, th, td      기본 테두리조차 없습니다
   hr, h4 이하        브라우저 기본값
   figure, figcaption, dl 등
 

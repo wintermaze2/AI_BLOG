@@ -117,34 +117,8 @@
 .post-body .note.caution{background:var(--warn-soft);border-left-color:var(--warn-rule)}
 .post-body .note.caution .note-title{color:var(--warn)}
 
-/* ── 표 ── */
-.post-body .table-wrap{
-  overflow-x:auto;margin:0 0 24px;
-  border:1px solid var(--rule);
-  -webkit-overflow-scrolling:touch;
-}
-.post-body table{border-collapse:collapse;width:100%;font-size:14.5px;line-height:1.7}
-.post-body th,.post-body td{
-  padding:12px 14px;text-align:left;vertical-align:top;
-  border-bottom:1px solid var(--rule);
-}
-.post-body th{
-  background:var(--panel);font-weight:700;color:var(--ink);
-  font-size:13px;letter-spacing:.02em;white-space:nowrap;
-}
-.post-body td{color:var(--ink-soft)}
-.post-body tr:last-child td{border-bottom:0}
-.post-body td code{white-space:nowrap}
-.post-body .t-tags{min-width:640px}
-.post-body .t-tags td:first-child,.post-body .t-tags th:first-child{white-space:nowrap}
-.post-body .t-tags td:nth-child(3),.post-body .t-tags td:nth-child(4),
-.post-body .t-tags th:nth-child(3),.post-body .t-tags th:nth-child(4){white-space:nowrap}
-.post-body .t-record{min-width:420px}
-.post-body .t-record th:first-child,.post-body .t-record td:first-child{white-space:nowrap;width:32%}
-.post-body .scroll-hint{
-  display:none;font-size:12px;color:var(--ink-muted);
-  margin:-16px 0 24px;
-}
+/* 표는 style.css 의 .post-body table 공통 스타일을 그대로 쓴다.
+   열이 많은 태그 표만 table-wide 로 최소 너비를 준다(마크업 쪽 클래스). */
 
 /* ── 마무리 CTA ── */
 .post-body .contact{
@@ -174,8 +148,7 @@
   .post-body{font-size:15.5px;line-height:1.8}
   .post-body h2{margin:48px 0 14px}
   .post-body pre{font-size:13px;padding:14px}
-  .post-body th,.post-body td{padding:10px 12px;font-size:13.5px}
-  .post-body .scroll-hint{display:block}
+  /* 표 축소와 scroll-hint 표시는 style.css 공통 스타일이 같은 폭에서 처리한다 */
   .post-body .cta{padding:26px 18px}
   .post-body .cta-btn{width:100%;justify-content:center;padding:16px 20px}
 }
@@ -243,7 +216,7 @@
 <p>DMARC 레코드는 도메인 앞에 <code>_dmarc</code>를 붙인 호스트에 <strong>TXT 타입</strong>으로 등록합니다.</p>
 
 <div class="table-wrap">
-<table class="t-record">
+<table>
   <thead><tr><th>항목</th><th>값</th></tr></thead>
   <tbody>
     <tr><td>이름(호스트)</td><td><code>_dmarc</code> 또는 <code>_dmarc.example.net</code></td></tr>
@@ -258,7 +231,7 @@
 <h3>주요 태그</h3>
 
 <div class="table-wrap">
-<table class="t-tags">
+<table class="table-wide">
   <thead><tr><th>태그</th><th>입력값 및 설명</th><th>필수</th><th>기본값</th></tr></thead>
   <tbody>
     <tr>
@@ -329,7 +302,7 @@
 <p>RFC 9989에서 다음 태그가 <strong>지원 중단(deprecated)</strong> 되었습니다. 이미 등록되어 있다면 다음 DNS 수정 시 제거하시는 것을 권장합니다.</p>
 
 <div class="table-wrap">
-<table class="t-record">
+<table>
   <thead><tr><th>태그</th><th>설명</th></tr></thead>
   <tbody>
     <tr><td><code>pct</code></td><td>정책을 적용할 메시지 비율(1~100). 단계적 적용 용도로 쓰였으나 구현 편차가 커 제거되었습니다. 점진적 도입은 <code>t=y</code>로 대체합니다.</td></tr>
@@ -346,7 +319,7 @@
 <p>예를 들어 <code>example.net</code>의 보고서를 <code>dmarc@report-service.com</code>으로 받으려면, <code>report-service.com</code> 쪽에 다음 레코드가 있어야 합니다.</p>
 
 <div class="table-wrap">
-<table class="t-record">
+<table>
   <thead><tr><th>항목</th><th>값</th></tr></thead>
   <tbody>
     <tr><td>이름(호스트)</td><td><code>example.net._report._dmarc.report-service.com</code></td></tr>
@@ -397,7 +370,7 @@
 <p>DKIM 정렬을 위해 다음 레코드를 DNS에 추가합니다.</p>
 
 <div class="table-wrap">
-<table class="t-record">
+<table>
   <thead><tr><th>항목</th><th>값</th></tr></thead>
   <tbody>
     <tr><td>이름(호스트)</td><td><code>mlk._domainkey</code> 또는 <code>mlk._domainkey.example.net</code></td></tr>

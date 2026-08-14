@@ -19,20 +19,36 @@ a:hover{text-decoration:underline}
 
 .site-header{border-bottom:1px solid var(--line); background:var(--soft)}
 .site-header .container{display:flex; align-items:center; justify-content:space-between; height:60px}
-.brand{display:inline-flex; align-items:center; gap:9px; font-weight:800; font-size:1.2rem; color:var(--fg)}
+/* 브랜드: 로고 높이를 글자 크기에 묶어 두 요소의 위/아래가 나란히 떨어지게 한다.
+   로고 PNG는 투명 여백 없이 잉크가 프레임을 꽉 채우므로(50x37 전체가 불투명)
+   이미지 높이 = 보이는 높이다. 한글 글자는 em의 약 0.9배 높이라 .9em으로 맞췄다.
+   굵기를 800 -> 700으로 낮춘 이유: 이 크기의 한글에 800은 'ㄹ' 같은 글자의
+   가로획이 서로 붙어 뭉개져 보인다. */
+.brand{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:1.25rem; font-weight:700; line-height:1;
+    letter-spacing:-.01em; color:var(--fg);
+}
 .brand:hover{text-decoration:none}
-.brand-logo{height:26px; width:auto; display:block}
+/* 높이 .95em = 한글 글자의 실제 잉크 높이(20px 기준 19px).
+   한글은 라인박스 중앙보다 아래에 놓이므로 translateY로 그만큼 내려 위/아래를 맞춘다.
+   em 단위라 font-size를 바꿔도 정렬이 유지된다. */
+.brand-logo{height:.95em; width:auto; display:block; transform:translateY(.07em)}
 .site-header nav{display:flex; align-items:center}
 .site-header nav a{margin-left:16px; color:var(--muted); font-size:.95rem}
 .search-form input{width:150px; padding:6px 12px; border:1px solid var(--line); border-radius:999px;
     background:#fff; font-size:.88rem; font-family:inherit; color:var(--fg); transition:width .15s ease}
 .search-form input:focus{outline:none; border-color:var(--accent); width:190px}
 
-/* 메일링크 본사 사이트로 보내는 버튼 (nav a 기본색을 덮어써야 함) */
+/* 메일링크 본사 사이트로 보내는 버튼 (nav a 기본색을 덮어써야 함).
+   검색 입력폼과 같은 테두리·라운드로 맞춘다. line-height를 지정하는 이유:
+   input은 line-height가 normal이지만 a는 body의 1.75를 물려받아 혼자 커진다. */
 .site-header nav a.btn-maillink{
-    padding:6px 14px; border-radius:999px; background:var(--accent); color:#fff;
-    font-size:.88rem; font-weight:600; white-space:nowrap}
-.site-header nav a.btn-maillink:hover{filter:brightness(.95); text-decoration:none}
+    padding:6px 14px; border:1px solid var(--line); border-radius:999px;
+    background:#fff; color:var(--accent);
+    font-size:.88rem; font-weight:600; line-height:1.2; white-space:nowrap}
+.site-header nav a.btn-maillink:hover{
+    border-color:var(--accent); background:var(--soft); text-decoration:none}
 
 /* 헤더 항목이 늘어 좁은 화면에서 넘치므로 줄바꿈을 허용한다 */
 @media (max-width:640px){

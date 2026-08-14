@@ -1,0 +1,225 @@
+<style>
+.post-body .note{
+  border-left:3px solid var(--accent);
+  background:var(--soft);
+  padding:16px 18px;
+  margin:0 0 20px;
+}
+.post-body .note > :last-child{margin-bottom:0}
+.post-body .note-title{display:block;font-weight:700;margin-bottom:8px}
+
+.post-body .cta{
+  margin:44px 0 0;
+  padding:32px 24px;
+  background:var(--soft);
+  border:1px solid var(--line);
+  text-align:center;
+}
+.post-body .cta-copy{
+  font-size:.9em;
+  color:var(--muted);
+  margin:0 0 18px;
+}
+.post-body .cta-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  max-width:100%;
+  padding:15px 34px;
+  background:var(--accent);
+  color:#fff;
+  font-family:var(--sans);
+  font-weight:700;
+  line-height:1.2;
+  text-decoration:none;
+  transition:opacity .15s ease;
+}
+.post-body .cta-btn:hover{opacity:.85;color:#fff;text-decoration:none}
+.post-body .cta-btn:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.post-body .cta-btn svg{flex:none}
+@media (max-width:640px){
+  .post-body .cta{padding:26px 18px}
+  .post-body .cta-btn{display:flex;width:100%;padding:16px 20px}
+}
+</style>
+
+<p>DKIM(DomainKeys Identified Mail, 도메인키 식별 메일)은 이메일이 발송된 출처를 인증하고, 전송 도중 메시지가 위·변조되지 않았는지를 확인할 수 있게 해 주는 이메일 인증 기술입니다. 이 글에서는 DKIM의 동작 원리와 DKIM-Signature 헤더의 각 태그가 어떤 의미인지, 그리고 메일링크를 이용해 메일을 발송할 때 필요한 DNS 레코드 등록 방법을 순서대로 설명합니다.</p>
+
+<h2>DKIM은 무엇을 보장하나요?</h2>
+
+<p>DKIM은 공개키 암호화 방식의 디지털 서명을 이용합니다. 발송자가 개인키로 메일에 서명하면, 수신 서버는 DNS에 공개된 공개키로 그 서명을 검증합니다. 이를 통해 다음 두 가지를 확인할 수 있습니다.</p>
+
+<ul>
+  <li><strong>발신 도메인의 진위</strong> — 서명에 사용된 개인키를 가진 주체가 실제로 해당 도메인의 관리자임을 확인합니다.</li>
+  <li><strong>메시지 무결성</strong> — 서명 이후 본문이나 주요 헤더가 중간에서 변경되지 않았음을 확인합니다.</li>
+</ul>
+
+<p>다만 DKIM 자체는 <strong>"이 메일을 수신할지 말지"를 결정하지 않습니다.</strong> 검증에 실패해도 메일이 반드시 차단되는 것은 아니며, 처리 방식은 전적으로 수신 측 정책에 달려 있습니다. DKIM은 인증 수단일 뿐 이메일 송수신에 필수적인 항목은 아니기 때문입니다. 실제 처리 정책을 지정하려면 DMARC를 함께 사용해야 합니다.</p>
+
+<h2>작동 방식</h2>
+
+<p>전체 흐름은 다음과 같습니다.</p>
+
+<ol>
+  <li>발송자가 공개키/개인키 쌍을 생성합니다.</li>
+  <li>공개키를 DNS 서버에 등록해 누구나 조회할 수 있게 합니다.</li>
+  <li>메일 발송 시 개인키로 서명한 <code>DKIM-Signature</code> 헤더를 만들어 메일에 삽입합니다.</li>
+  <li>수신 서버는 DNS 질의로 공개키를 가져와 서명을 검증합니다.</li>
+</ol>
+
+<h3>1단계 — 키 쌍 생성과 공개키 등록</h3>
+
+<p>개인키는 외부에 노출되지 않도록 관리하고, 공개키는 DNS에 TXT 레코드로 등록합니다. 적용할 도메인을 <code>example.net</code>이라고 가정하겠습니다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>항목</th><th>값</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>이름(호스트)</td>
+      <td><code>selector._domainkey</code> 또는 <code>selector._domainkey.example.net</code></td>
+    </tr>
+    <tr><td>유형(Record Type)</td><td>TXT</td></tr>
+    <tr>
+      <td>값(Value)</td>
+      <td><code>v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A...</code></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p><code>selector</code> 부분은 사용자가 정하는 이름입니다. <code>s1</code>, <code>mail</code>, <code>dkim</code>처럼 식별 가능한 영문 단어를 쓰면 됩니다. 하나의 도메인에 서로 다른 셀렉터로 여러 개의 키를 동시에 등록할 수 있어, 발송 시스템별로 키를 분리하거나 키를 교체할 때 유용합니다. <code>_domainkey</code>는 고정값이므로 그대로 사용해야 합니다.</p>
+
+<p>값에 들어가는 태그의 의미는 다음과 같습니다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>태그</th><th>설명</th></tr></thead>
+  <tbody>
+    <tr><td><code>v</code></td><td>버전. <code>DKIM1</code> 고정값입니다.</td></tr>
+    <tr><td><code>k</code></td><td>키 타입. 생략하면 <code>rsa</code>로 간주합니다. RFC 8463에서 <code>ed25519</code>가 추가되었으나 아직 지원하지 않는 수신 서버가 있어, 사용한다면 RSA 키와 병행 등록하는 것이 안전합니다.</td></tr>
+    <tr><td><code>p</code></td><td>Base64로 인코딩한 공개키입니다. 위 예시는 형식을 보여 주기 위해 줄인 것이므로 <strong>반드시 직접 생성한 키를 입력해야 합니다.</strong></td></tr>
+    <tr><td><code>t</code></td><td>선택. <code>t=y</code>는 테스트 모드로, 수신 서버에 검증 실패를 정책에 반영하지 말라고 요청합니다.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note">
+  <span class="note-title">등록 시 자주 발생하는 문제</span>
+  <p><strong>따옴표</strong> — 자료에 따라 값 전체가 큰따옴표로 묶여 있는 경우가 있는데, 대부분의 DNS 관리 콘솔은 따옴표 없이 값만 입력해야 합니다. 문서에서 복사할 때 곡선 따옴표(“ ”)가 섞여 들어가면 등록에 실패합니다.</p>
+  <p><strong>255바이트 제한</strong> — DNS TXT 레코드는 문자열 하나가 255바이트를 넘을 수 없습니다. 2048비트 RSA 공개키는 이 길이를 초과하므로, 값을 여러 문자열로 나누어 입력해야 합니다. 관리 콘솔이 자동으로 분할해 주는 경우도 있고, 직접 <code>"앞부분" "뒷부분"</code> 형태로 나누어 넣어야 하는 경우도 있으니 등록 후 반드시 조회해서 확인하시기 바랍니다.</p>
+  <p><strong>키 길이</strong> — 1024비트 키도 동작하지만, 2024년부터 주요 메일 서비스가 대량 발송자에게 2048비트를 권고하고 있습니다. 신규 발급 시에는 2048비트를 사용하시기 바랍니다.</p>
+</div>
+
+<h3>2단계 — DKIM-Signature 헤더 생성</h3>
+
+<p>발송자는 메일 헤더와 본문을 이용해 서명을 만들고, 이를 <code>DKIM-Signature</code> 헤더로 원본 헤더에 추가합니다. 이 헤더는 평소에는 보이지 않으며, 포털 등에서 제공하는 "메일 원문 보기" 기능으로 확인할 수 있습니다.</p>
+
+<pre><code>DKIM-Signature: v=1; a=rsa-sha256; d=example.net; s=news;
+ c=relaxed/relaxed; t=1126524832; x=1149015927;
+ h=from:to:subject:date:reply-to:message-id;
+ bh=2jUSOH9NhtVGCQWNr9BrIAPreKQjO6Sn7XIkfJVOzv8=;
+ b=hyjCnOfAKDdLZdKIc9G1q7LoDWlEniSbzc+yuU2zGrtruF00ldcFVoG4WTHNiYw...</code></pre>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>태그</th><th>필수</th><th>설명</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>v</code></td><td>필수</td>
+      <td>버전 정보이며 항상 <code>1</code>입니다.</td>
+    </tr>
+    <tr>
+      <td><code>a</code></td><td>필수</td>
+      <td>서명 알고리즘입니다. 대부분 <code>rsa-sha256</code>을 사용합니다.</td>
+    </tr>
+    <tr>
+      <td><code>d</code></td><td>필수</td>
+      <td>서명 도메인입니다. <strong>이 값이 DMARC 판정의 기준이 됩니다.</strong></td>
+    </tr>
+    <tr>
+      <td><code>s</code></td><td>필수</td>
+      <td>셀렉터입니다. <code>d</code>와 조합해 공개키를 조회합니다. 위 예시는 <code>d=example.net</code>, <code>s=news</code>이므로 <code>news._domainkey.example.net</code>에 TXT 질의를 보냅니다.</td>
+    </tr>
+    <tr>
+      <td><code>h</code></td><td>필수</td>
+      <td>서명에 포함된 헤더 목록입니다. 나열된 순서대로 서명했으므로 검증 시에도 같은 순서로 처리해야 합니다. 여기에 없는 헤더는 중간에 추가·변경되어도 검증에 영향을 주지 않습니다.</td>
+    </tr>
+    <tr>
+      <td><code>bh</code></td><td>필수</td>
+      <td>본문 해시(body hash)를 Base64로 인코딩한 값입니다. 해시 알고리즘은 임의 길이의 입력을 고정 길이 값으로 변환하며, 한 글자만 달라져도 결과가 완전히 바뀝니다. 수신 측은 받은 본문의 해시를 직접 계산해 이 값과 비교함으로써 본문 변조 여부를 판단합니다.</td>
+    </tr>
+    <tr>
+      <td><code>b</code></td><td>필수</td>
+      <td>개인키로 만든 서명 값입니다. <code>h</code>에 나열된 헤더와 <strong>DKIM-Signature 헤더 자체</strong>(단, <code>b=</code> 값은 비운 상태)를 대상으로 서명합니다. 수신 측은 공개키로 이 서명을 검증합니다.</td>
+    </tr>
+    <tr>
+      <td><code>c</code></td><td>선택</td>
+      <td>정규화(canonicalization) 방식을 <code>헤더/본문</code> 형식으로 지정합니다. <code>simple</code>은 한 글자도 달라지면 안 되고, <code>relaxed</code>는 전송 과정에서 흔히 생기는 공백이나 줄바꿈 차이를 허용합니다. 생략 시 <code>simple/simple</code>이지만, 중계 서버를 거치며 검증이 깨지는 것을 막기 위해 실무에서는 <code>relaxed/relaxed</code>를 사용합니다.</td>
+    </tr>
+    <tr>
+      <td><code>t</code> / <code>x</code></td><td>선택</td>
+      <td>서명 생성 시각과 만료 시각을 UNIX 타임스탬프로 나타냅니다.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p><code>b</code> 값은 실제로는 훨씬 길며, 위 예시는 지면상 줄인 것입니다.</p>
+
+<h3>3단계 — 수신 측 검증</h3>
+
+<p>수신 서버는 <code>d</code>와 <code>s</code>로 공개키를 조회한 뒤 두 가지를 확인합니다. 본문 해시를 직접 계산해 <code>bh</code>와 비교하고, 공개키로 <code>b</code> 서명을 검증합니다. 둘 다 통과하면 DKIM 검증에 성공한 것입니다.</p>
+
+<h2>DKIM만으로는 부족한 이유</h2>
+
+<p>여기서 중요한 점이 있습니다. DKIM 검증은 <code>DKIM-Signature</code> 헤더에 담긴 정보만으로 이루어지며, <strong>수신자에게 보이는 From 주소와는 아무 관련이 없습니다.</strong> 즉 아무 도메인으로 서명해도 서명 자체는 유효하게 통과할 수 있습니다.</p>
+
+<p>이 간극을 메우는 것이 DMARC의 <strong>정렬(alignment)</strong> 개념입니다. DMARC는 DKIM 검증 성공 여부뿐 아니라 <code>d</code> 태그의 도메인이 From 주소의 도메인과 일치하는지까지 확인합니다. 따라서 DKIM을 적용하더라도 두 도메인이 다르면 DMARC 판정에는 실패하게 됩니다.</p>
+
+<p>DMARC의 동작 방식과 정책 레코드 작성법은 <a href="/posts/about-dmarc">DMARC에 대하여 알아보기</a> 문서에서 자세히 다루고 있습니다.</p>
+
+<h2>메일링크 이용 시 DNS 레코드 등록 방법</h2>
+
+<p>메일링크는 기본적으로 메일링크 소유 도메인으로 <code>DKIM-Signature</code>를 작성합니다. 따라서 <code>d</code>와 <code>s</code> 태그에는 메일링크와 관련된 값이 들어갑니다.</p>
+
+<p>예를 들어 메일링크 사용자가 보내는사람 주소로 <code>reply@example.net</code>을 사용한다고 가정해 보겠습니다. 이 주소는 From 헤더에 들어가지만 서명 도메인은 메일링크 쪽이므로, 두 도메인이 서로 달라집니다. 일반적인 DKIM 검증만 수행하는 환경에서는 문제가 없지만, From 도메인과 서명 도메인의 일치를 요구하는 환경에서는 메일이 전달되지 않거나 스팸편지함으로 분류될 수 있습니다.</p>
+
+<p>이 문제를 해결하려면 사용자 소유 도메인의 DNS에 메일링크의 DKIM 서버를 연결하는 CNAME 레코드를 추가해야 합니다. 앞서 설명한 방법이 직접 키 쌍을 만들어 TXT로 등록하는 방식이었다면, 메일링크의 DKIM 서비스를 이용할 때는 다음과 같이 등록합니다. 사용자 도메인은 <code>example.net</code>이라고 가정합니다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>항목</th><th>값</th></tr></thead>
+  <tbody>
+    <tr><td>이름(호스트)</td><td><code>mlk._domainkey</code> 또는 <code>mlk._domainkey.example.net</code></td></tr>
+    <tr><td>유형(Record Type)</td><td>CNAME</td></tr>
+    <tr><td>값(Value)</td><td><code>dkim.maillink.co.kr</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>CNAME 방식이므로 키 생성과 교체는 메일링크가 담당하며, 고객사에서 개인키를 직접 보관하거나 관리할 필요가 없습니다.</p>
+
+<p>이 레코드가 정상적으로 등록되면 메일링크는 <code>d=example.net</code>으로 서명하게 되어 From 도메인과 서명 도메인이 일치합니다. 결과적으로 DMARC의 DKIM 정렬 조건을 충족하며, 엄격한 발신자 인증 규칙을 적용하는 메일 서비스의 요구도 만족시킬 수 있습니다.</p>
+
+<div class="note">
+  <span class="note-title">등록 후 확인 방법</span>
+  <p>DNS 반영에는 보통 수십 분에서 하루 정도가 걸립니다. 메일링크 사용자라면 별도의 도구 없이 화면에서 바로 확인하실 수 있습니다.</p>
+  <p><strong>메일링크 접속 → 이메일 발송 → 보내는이 주소 관리</strong>로 이동한 뒤, 목록에 보이는 도메인을 더블클릭하면 정상 등록 여부가 표시됩니다.</p>
+  <p>직접 DNS를 조회해 확인하려면 아래 명령을 사용합니다.</p>
+  <pre><code>nslookup -type=CNAME mlk._domainkey.example.net</code></pre>
+  <p>메일을 실제로 발송한 뒤 "메일 원문 보기"에서 <code>DKIM-Signature</code> 헤더의 <code>d=</code> 값이 사용자 도메인으로 표시되는지 확인하시면 확실합니다.</p>
+</div>
+
+<p>추가적인 문의 사항은 메일링크 고객센터(<strong>1544-9231</strong> 또는 <a href="mailto:help@maillink.co.kr">help@maillink.co.kr</a>)로 연락 주시기 바랍니다.</p>
+
+<div class="cta">
+  <p class="cta-copy">SPF·DKIM·DMARC 설정을 지원하는 대량메시징 플랫폼</p>
+  <a class="cta-btn" href="https://www.maillink.co.kr?r=tech">
+    메일링크 바로가기
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
+      <path d="M5 12h14M13 6l6 6-6 6"/>
+    </svg>
+  </a>
+</div>

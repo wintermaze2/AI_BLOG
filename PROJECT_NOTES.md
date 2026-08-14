@@ -39,7 +39,8 @@
         ├ "/category/{slug}" 카테고리 아카이브(?page=N)
         ├ "/tag/{slug}"      태그 아카이브(?page=N)
         └ "/search?q=..."    검색 결과(?page=N)
-      AdminServlet("/admin/*") ─ 로그인/CRUD (AuthFilter로 보호)
+      AdminServlet("/admin/*") ─ 로그인/CRUD
+        └ 필터 체인(web.xml 선언, 순서 중요): AdminIpFilter → AuthFilter
       SitemapServlet("/sitemap.xml"), RssServlet("/rss.xml")
       정적: /static/* , /robots.txt → 컨테이너 default 서블릿 (web.xml)
 ```
@@ -55,7 +56,7 @@ blog/
 └── src/main/
     ├── java/com/example/blog/
     │   ├── controller/  DispatcherServlet, AdminServlet, SitemapServlet, RssServlet
-    │   ├── filter/      AuthFilter (/admin/* 세션 보호)
+    │   ├── filter/      AdminIpFilter(IP 허용목록), AuthFilter(세션 보호)
     │   ├── dao/         PostDao, CategoryDao, TagDao, AdminUserDao
     │   ├── model/       Post, Category, Tag, AdminUser
     │   ├── tool/        GenerateHash (BCrypt 해시 생성 CLI)
@@ -100,6 +101,13 @@ blog/
 - 본문 입력: EasyMDE(Markdown, CDN), 저장 시 flexmark로 HTML 변환
 - 태그 입력: 쉼표(또는 줄바꿈) 구분 텍스트, 글당 최대 20개. 저장 시 slug로 정규화해 동기화
 - 보안: BCrypt, 세션 CSRF 토큰(save/delete), 로그인 시 `changeSessionId()`
+- **IP 허용목록**: `/admin/*` 는 허용 IP에서만 접근 가능(그 외 404). 인증보다 먼저 검사한다.
+  - 기본 허용: `211.239.43.40`, `58.121.175.130` (`AdminIpFilter.DEFAULT_ALLOWED_IPS`)
+  - 환경변수 `BLOG_ADMIN_ALLOWED_IPS`(쉼표 구분)로 재빌드 없이 덮어쓸 수 있다
+  - 판정 기준은 `getRemoteAddr()`이며, **Nginx 뒤이므로 Tomcat RemoteIpValve가 필수**다.
+    밸브가 없으면 모든 요청이 127.0.0.1로 보여 아무도 못 들어간다
+  - **잠겼을 때**: `sudo grep AdminIpFilter /opt/tomcat/logs/catalina.out` 로 관측된 IP를 확인 →
+    systemd에 `BLOG_ADMIN_ALLOWED_IPS` 설정 후 `daemon-reload && restart tomcat`
 - **최초 계정 생성**:
   ```bash
   mvn -q compile exec:java -Dexec.mainClass=com.example.blog.tool.GenerateHash -Dexec.args="비밀번호"
@@ -120,7 +128,7 @@ bash deployremote.sh         # 로컬 mvn package → scp → 서버 Tomcat 재�
 ```
 빌드 산출물이 없으면 전송 전에 중단하므로 서버는 그대로 유지됩니다.
 런타임 접속정보는 **환경변수**로 주입 (`/etc/systemd/system/tomcat.service` [Service]):
-`BLOG_DB_URL, BLOG_DB_USER, BLOG_DB_PASS, BLOG_BASE_URL, BLOG_SITE_NAME`
+`BLOG_DB_URL, BLOG_DB_USER, BLOG_DB_PASS, BLOG_BASE_URL, BLOG_SITE_NAME, BLOG_ADMIN_ALLOWED_IPS`
 → 값 변경 시 `sudo systemctl daemon-reload && sudo systemctl restart tomcat`.
 미설정 시 `Database.java`/`SiteConfig.java`의 기본값 사용.
 

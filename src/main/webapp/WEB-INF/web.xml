@@ -25,6 +25,32 @@
 
     <!-- DispatcherServlet, SitemapServlet, RssServlet, Listener 는 애노테이션으로 등록됨 -->
 
+    <!-- ===================================================================
+         관리자 필터 체인. 애노테이션(@WebFilter)으로 선언하면 필터 간 실행 순서가
+         스펙상 보장되지 않으므로, 순서가 중요한 이 둘만 web.xml에 명시한다.
+         web.xml의 filter-mapping은 선언 순서대로 적용된다.
+
+           1) adminIpFilter  : 허용 IP가 아니면 여기서 404로 끊는다
+           2) authFilter     : 통과한 요청에 대해 세션 로그인 여부 확인
+         =================================================================== -->
+    <filter>
+        <filter-name>adminIpFilter</filter-name>
+        <filter-class>com.example.blog.filter.AdminIpFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>adminIpFilter</filter-name>
+        <url-pattern>/admin/*</url-pattern>
+    </filter-mapping>
+
+    <filter>
+        <filter-name>authFilter</filter-name>
+        <filter-class>com.example.blog.filter.AuthFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>authFilter</filter-name>
+        <url-pattern>/admin/*</url-pattern>
+    </filter-mapping>
+
     <welcome-file-list>
         <welcome-file>index</welcome-file>
     </welcome-file-list>

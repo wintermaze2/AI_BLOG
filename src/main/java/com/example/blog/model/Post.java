@@ -14,6 +14,8 @@ public class Post {
     private String summary;
     private String contentMd;
     private String contentHtml;
+    /** 본문 원문의 형식: MD | HTML. content_md에 담긴 내용을 어떻게 다룰지 결정한다. */
+    private String contentType = "MD";
     private String thumbnailUrl;
     private String metaDescription;
     private String status;          // DRAFT | PUBLISHED
@@ -44,6 +46,11 @@ public class Post {
 
     public String getContentHtml() { return contentHtml; }
     public void setContentHtml(String contentHtml) { this.contentHtml = contentHtml; }
+
+    public String getContentType() { return contentType; }
+    public void setContentType(String contentType) {
+        this.contentType = "HTML".equals(contentType) ? "HTML" : "MD";
+    }
 
     public String getThumbnailUrl() { return thumbnailUrl; }
     public void setThumbnailUrl(String thumbnailUrl) { this.thumbnailUrl = thumbnailUrl; }

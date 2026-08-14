@@ -17,8 +17,9 @@ CREATE TABLE IF NOT EXISTS category (
 
 -- ---------------------------------------------------------------------
 -- 글(post)
---   content_md  : 원문(Markdown)  - 편집용
+--   content_md  : 원문(편집용). content_type이 MD면 Markdown, HTML이면 HTML 소스
 --   content_html: 렌더링된 HTML   - 조회 성능용(저장 시 미리 변환)
+--   content_type: MD | HTML - 원문을 저장 시 변환할지(MD) 그대로 쓸지(HTML) 결정
 --   status      : DRAFT | PUBLISHED
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS post (
@@ -28,6 +29,7 @@ CREATE TABLE IF NOT EXISTS post (
     summary          VARCHAR(500)      NULL,
     content_md       MEDIUMTEXT        NULL,
     content_html     MEDIUMTEXT        NULL,
+    content_type     VARCHAR(10)   NOT NULL DEFAULT 'MD',
     thumbnail_url    VARCHAR(500)      NULL,
     meta_description VARCHAR(320)      NULL,
     status           VARCHAR(20)   NOT NULL DEFAULT 'DRAFT',
@@ -68,6 +70,30 @@ CREATE TABLE IF NOT EXISTS admin_user (
     password_hash VARCHAR(100) NOT NULL,
     created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =====================================================================
+-- 마이그레이션 (이미 만들어진 DB에 나중에 추가된 컬럼 반영)
+--
+-- CREATE TABLE IF NOT EXISTS 는 기존 테이블에 컬럼을 추가해 주지 않으므로,
+-- 운영 중인 DB를 위해 여기서 따로 처리한다.
+-- MySQL 8.4 에는 ADD COLUMN IF NOT EXISTS 가 없어서, information_schema 를 보고
+-- 필요할 때만 ALTER 를 실행하도록 만들었다. 이 파일을 여러 번 실행해도 안전하다.
+-- =====================================================================
+
+-- post.content_type (본문 형식: MD | HTML)
+SET @col_exists := (
+    SELECT COUNT(*) FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME   = 'post'
+       AND COLUMN_NAME  = 'content_type'
+);
+SET @ddl := IF(@col_exists > 0,
+    'SELECT ''post.content_type 컬럼이 이미 있습니다 - 건너뜀'' AS migration',
+    'ALTER TABLE post ADD COLUMN content_type VARCHAR(10) NOT NULL DEFAULT ''MD'' AFTER content_html'
+);
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- =====================================================================
 -- 샘플 데이터

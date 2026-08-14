@@ -81,6 +81,13 @@ blog/
     (태그 동기화 트랜잭션 안에서, 그리고 글 삭제 직후에 호출).
 - `admin_user(id, username, password_hash)` — BCrypt(cost 12)
 - 본문은 `content_md`(원문)와 `content_html`(렌더링본)을 함께 저장 → 조회 시 파싱 비용 0.
+- `content_type`(MD | HTML)이 원문을 어떻게 다룰지 정한다.
+  - `MD`: 저장 시 flexmark로 변환해 `content_html` 생성
+  - `HTML`: 변환 없이 입력을 그대로 `content_html`에 저장
+  - 어느 쪽이든 원문은 `content_md`에 보관해 재편집 시 그대로 다시 보여준다
+  - **배포 순서 주의**: 모든 글 조회 쿼리가 `content_type`을 SELECT하므로,
+    WAR 배포 **전에** `sql/schema.sql`의 마이그레이션(ALTER TABLE)을 먼저 적용해야 한다.
+    순서가 뒤바뀌면 컬럼이 없어 모든 페이지가 500을 낸다.
 
 ## 7. SEO 처리 (중요)
 - 예쁜 URL: `/posts/{slug}` (slug 컬럼)
@@ -98,7 +105,11 @@ blog/
 
 ## 8. 관리자 기능
 - `/admin/login` 로그인(세션) → `/admin` 목록 → `/admin/new`, `/admin/edit?id=` , save/delete
-- 본문 입력: EasyMDE(Markdown, CDN), 저장 시 flexmark로 HTML 변환
+- 본문 입력: 형식 선택(Markdown / HTML) + `.md`/`.html` 파일 불러오기(FileReader, UTF-8)
+  - Markdown일 때만 EasyMDE(CDN)를 붙인다. HTML 형식이면 에디터를 떼고 일반 textarea로 둔다
+    (EasyMDE는 CodeMirror 기반이라 HTML 소스 편집에 방해가 되고, 값 주입 경로도 다르다)
+  - 파일을 불러오면 확장자에 맞춰 형식 드롭다운을 자동으로 맞춘다
+    (`.html`을 Markdown으로 둔 채 저장하면 flexmark가 원문을 뭉갠다)
 - 태그 입력: 쉼표(또는 줄바꿈) 구분 텍스트, 글당 최대 20개. 저장 시 slug로 정규화해 동기화
 - 보안: BCrypt, 세션 CSRF 토큰(save/delete), 로그인 시 `changeSessionId()`
 - **IP 허용목록**: `/admin/*` 는 허용 IP에서만 접근 가능(그 외 404). 인증보다 먼저 검사한다.

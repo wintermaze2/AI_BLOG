@@ -131,7 +131,9 @@ public class AdminServlet extends HttpServlet {
         String title  = trim(req.getParameter("title"));
         String slug   = trim(req.getParameter("slug"));
         String summary = trim(req.getParameter("summary"));
-        String md     = req.getParameter("contentMd");
+        // contentMd 파라미터는 형식과 무관하게 "본문 원문"을 담는다(MD면 마크다운, HTML이면 HTML 소스).
+        String source = req.getParameter("contentMd");
+        String contentType = "HTML".equals(req.getParameter("contentType")) ? "HTML" : "MD";
         String thumb  = trim(req.getParameter("thumbnailUrl"));
         String meta   = trim(req.getParameter("metaDescription"));
         String status = "PUBLISHED".equals(req.getParameter("status")) ? "PUBLISHED" : "DRAFT";
@@ -154,8 +156,13 @@ public class AdminServlet extends HttpServlet {
         p.setTitle(title);
         p.setSlug(slug);
         p.setSummary(summary);
-        p.setContentMd(md);
-        p.setContentHtml(MarkdownUtil.toHtml(md));
+        // 원문은 형식과 무관하게 content_md에 보관한다(재편집 시 그대로 다시 보여주기 위함).
+        // 렌더링본(content_html)은 MD면 변환하고, HTML이면 입력을 그대로 쓴다.
+        p.setContentMd(source);
+        p.setContentType(contentType);
+        p.setContentHtml("HTML".equals(contentType)
+                ? (source == null ? "" : source)
+                : MarkdownUtil.toHtml(source));
         p.setThumbnailUrl(thumb);
         p.setMetaDescription(meta);
         p.setStatus(status);

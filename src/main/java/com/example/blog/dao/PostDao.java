@@ -19,7 +19,8 @@ import java.util.List;
 public class PostDao {
 
     private static final String BASE_SELECT =
-            "SELECT p.id, p.slug, p.title, p.summary, p.content_html, p.thumbnail_url, " +
+            "SELECT p.id, p.slug, p.title, p.summary, p.content_html, p.content_type, " +
+            "       p.thumbnail_url, " +
             "       p.meta_description, p.status, p.view_count, p.category_id, " +
             "       p.created_at, p.updated_at, p.published_at, " +
             "       c.name AS category_name, c.slug AS category_slug " +
@@ -275,6 +276,7 @@ public class PostDao {
     public Post findByIdFull(long id) {
         String sql =
                 "SELECT p.id, p.slug, p.title, p.summary, p.content_md, p.content_html, " +
+                "       p.content_type, " +
                 "       p.thumbnail_url, p.meta_description, p.status, p.view_count, p.category_id, " +
                 "       p.created_at, p.updated_at, p.published_at, " +
                 "       c.name AS category_name, c.slug AS category_slug " +
@@ -312,8 +314,8 @@ public class PostDao {
     public long insert(Post p) {
         String sql = "INSERT INTO post " +
                 "(slug, title, summary, content_md, content_html, thumbnail_url, " +
-                " meta_description, status, category_id, published_at) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?)";
+                " meta_description, status, category_id, published_at, content_type) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?)";
         try (Connection con = Database.getConnection();
              PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             bindWrite(ps, p);
@@ -330,11 +332,12 @@ public class PostDao {
     public void update(Post p) {
         String sql = "UPDATE post SET " +
                 "slug=?, title=?, summary=?, content_md=?, content_html=?, thumbnail_url=?, " +
-                "meta_description=?, status=?, category_id=?, published_at=? WHERE id=?";
+                "meta_description=?, status=?, category_id=?, published_at=?, content_type=? " +
+                "WHERE id=?";
         try (Connection con = Database.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             bindWrite(ps, p);
-            ps.setLong(11, p.getId());
+            ps.setLong(12, p.getId());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("update 실패", e);
@@ -353,7 +356,7 @@ public class PostDao {
         }
     }
 
-    /** insert/update 공통 파라미터 바인딩(1~10). */
+    /** insert/update 공통 파라미터 바인딩(1~11). update는 이어서 12번에 id를 바인딩한다. */
     private void bindWrite(PreparedStatement ps, Post p) throws SQLException {
         ps.setString(1, p.getSlug());
         ps.setString(2, p.getTitle());
@@ -367,6 +370,7 @@ public class PostDao {
         else ps.setNull(9, java.sql.Types.BIGINT);
         if (p.getPublishedAt() != null) ps.setTimestamp(10, Timestamp.valueOf(p.getPublishedAt()));
         else ps.setNull(10, java.sql.Types.TIMESTAMP);
+        ps.setString(11, p.getContentType());
     }
 
     private Post map(ResultSet rs) throws SQLException {
@@ -376,6 +380,7 @@ public class PostDao {
         p.setTitle(rs.getString("title"));
         p.setSummary(rs.getString("summary"));
         p.setContentHtml(rs.getString("content_html"));
+        p.setContentType(rs.getString("content_type"));
         p.setThumbnailUrl(rs.getString("thumbnail_url"));
         p.setMetaDescription(rs.getString("meta_description"));
         p.setStatus(rs.getString("status"));

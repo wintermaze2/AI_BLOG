@@ -1,11 +1,17 @@
 :root{
     --fg:#1a1f2b; --muted:#6b7688; --accent:#2f6fed; --line:#e6e9ef; --bg:#ffffff; --soft:#f7f8fb;
+    /* 웹폰트는 layout/fonts.jsp 에서 로드한다. 뒤쪽은 폰트 도착 전/실패 시 대체 스택. */
+    --sans:'Noto Sans KR','Pretendard','Apple SD Gothic Neo','Malgun Gothic',
+           -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
 }
 *{box-sizing:border-box}
 body{
     margin:0; color:var(--fg); background:var(--bg);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    font-family:var(--sans);
     line-height:1.75; font-size:17px;
+    word-break:keep-all; overflow-wrap:break-word;
+    -webkit-font-smoothing:antialiased;
 }
 a{color:var(--accent); text-decoration:none}
 a:hover{text-decoration:underline}
@@ -62,7 +68,7 @@ a:hover{text-decoration:underline}
 .post-body h1,.post-body h2,.post-body h3{margin-top:1.6em; line-height:1.35}
 .post-body p{margin:1em 0}
 .post-body pre{background:#0f1524; color:#e6ebf5; padding:16px; border-radius:8px; overflow-x:auto; font-size:.9rem}
-.post-body code{font-family:"SF Mono",Menlo,Consolas,monospace; font-size:.92em}
+.post-body code{font-family:var(--mono); font-size:.92em}
 .post-body :not(pre)>code{background:var(--soft); padding:2px 6px; border-radius:4px}
 .post-body img{max-width:100%; height:auto; border-radius:8px}
 .post-body blockquote{border-left:4px solid var(--line); margin:1em 0; padding:.4em 1em; color:var(--muted)}
@@ -114,6 +120,10 @@ body.admin{background:#eef1f6}
 
 /* 글 작성 폼 */
 .post-form{background:#fff; padding:26px; border-radius:12px}
+/* 본문 원문(Markdown/HTML 소스) 편집 영역은 고정폭 글꼴이 읽기 좋다.
+   .CodeMirror 는 EasyMDE(CDN)가 textarea를 감쌀 때 만드는 요소다. */
+.post-form textarea,
+.EasyMDEContainer .CodeMirror{font-family:var(--mono); font-size:.92rem; line-height:1.7}
 .post-form .form-row{display:flex; gap:16px}
 .post-form .form-row label{flex:1}
 .form-actions{display:flex; gap:10px; margin-top:10px}

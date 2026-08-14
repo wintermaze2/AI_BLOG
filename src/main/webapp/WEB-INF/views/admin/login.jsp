@@ -9,6 +9,7 @@
     <title>관리자 로그인</title>
     <link rel="icon" type="image/png"
           href="${pageContext.request.contextPath}/static/img/logo-bg-trans.png">
+    <%@ include file="/WEB-INF/views/layout/fonts.jsp" %>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/static/css/style.css">
 </head>
 <body class="admin">

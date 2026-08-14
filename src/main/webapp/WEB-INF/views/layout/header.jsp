@@ -35,6 +35,7 @@
 
     <link rel="icon" type="image/png"
           href="${pageContext.request.contextPath}/static/img/logo-bg-trans.png">
+    <%@ include file="/WEB-INF/views/layout/fonts.jsp" %>
     <%-- 화면 상단 메뉴에서는 뺐지만, 피드 자동 검색용 link는 유지한다(/rss.xml 정상 동작) --%>
     <link rel="alternate" type="application/rss+xml"
           title="${fn:escapeXml(siteName)} RSS" href="${baseUrl}/rss.xml">

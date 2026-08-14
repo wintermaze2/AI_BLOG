@@ -11,7 +11,7 @@
    - 모든 선택자를 .post-body 하위로 한정 : 그대로 두면 :root 변수(--muted 등)가
                                           블로그 전체 색을 덮어씀
    - 다크모드 블록 제거 : 블로그 본체가 다크모드를 지원하지 않아 본문만 검게 변함
-   - 웹폰트(Noto Sans KR / JetBrains Mono) 제거 : 블로그 기본 폰트 스택 사용
+   - 웹폰트 <link> 제거 : 블로그가 layout/fonts.jsp 에서 같은 폰트를 이미 로드함
 
   폼 입력값
    - 제목      : DMARC에 대하여 알아보기
@@ -36,7 +36,8 @@
   --warn:#8a6100;
   --warn-soft:#fdf6e6;
   --warn-rule:#e8c76a;
-  --doc-mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  /* style.css 의 --mono 와 동일. 웹폰트는 layout/fonts.jsp 가 이미 로드해 둔다. */
+  --doc-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
 
   color:var(--ink);
   font-size:16px;

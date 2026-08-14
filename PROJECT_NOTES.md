@@ -64,7 +64,7 @@ blog/
     │                    SiteConfig, PasswordUtil, AppContextListener
     └── webapp/
         ├── WEB-INF/web.xml
-        ├── WEB-INF/views/  layout/(header,footer), post/(list,detail),
+        ├── WEB-INF/views/  layout/(header,footer,fonts), post/(list,detail),
         │                   admin/(login,list,form), 404, error
         ├── static/css/style.css
         └── robots.txt
@@ -147,6 +147,12 @@ bash deployremote.sh         # 로컬 mvn package → scp → 서버 Tomcat 재�
 - **Jakarta 네임스페이스** 필수: `jakarta.servlet.*`, JSTL taglib `jakarta.tags.core` / `jakarta.tags.functions` (구 `javax`/`java.sun.com` URI 사용 금지).
 - 모든 SQL은 **PreparedStatement** (SQL 인젝션 방지).
 - 사용자 입력 출력은 JSP에서 `<c:out>` / `fn:escapeXml` (XSS 방지). 단 `content_html`은 관리자 작성 신뢰 HTML이라 그대로 출력.
+- **폰트**: 본문 Noto Sans KR, 코드 JetBrains Mono (Google Fonts).
+  - 로딩은 `layout/fonts.jsp` 한 곳에서만 하고, `<head>`를 직접 가진 화면
+    (`layout/header.jsp`, `admin/login·list·form.jsp`)이 정적 include 로 끌어 쓴다.
+  - CSS에서는 `var(--sans)` / `var(--mono)` 로만 참조한다(style.css `:root`에 정의).
+  - Noto Sans KR은 `wght@400..800` 가변 축으로 받는다. 사이트가 600·800도 쓰는데
+    그 두께가 없으면 브라우저가 굵기를 합성해 한글이 뭉개진다.
 - slug는 `SlugUtil.toSlug()` (한글 허용, 공백/특수문자 → 하이픈). 중복 시 타임스탬프 suffix.
 - DB 접속 실패 시 현재는 리스너에서 fail-fast (앱 미기동). 필요 시 견고화 여지 있음.
 

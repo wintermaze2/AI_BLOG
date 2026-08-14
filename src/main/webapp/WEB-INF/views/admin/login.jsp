@@ -7,6 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>관리자 로그인</title>
+    <link rel="icon" type="image/png"
+          href="${pageContext.request.contextPath}/static/img/logo-bg-trans.png">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/static/css/style.css">
 </head>
 <body class="admin">

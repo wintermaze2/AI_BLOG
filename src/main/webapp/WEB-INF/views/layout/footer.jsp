@@ -1,9 +1,8 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 </main>
 <footer class="site-footer">
     <div class="container">
-        <p>&copy; ${fn:escapeXml(siteName)} · Powered by Tomcat + JSP + MySQL</p>
+        <p>메일링크 기술블로그 &copy; Netpathy,Inc.</p>
     </div>
 </footer>
 </body>

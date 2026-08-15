@@ -114,9 +114,31 @@ a:hover{text-decoration:underline}
 .post-body td code{white-space:nowrap}
 /* 표가 잘렸을 때 표 아래에 두는 안내문. 좁은 화면에서만 보인다. */
 .post-body .scroll-hint{display:none; font-size:.8rem; color:var(--muted); margin:-1.1em 0 1.6em}
+
+/* 글 끝에 붙는 맺음 CTA. 모든 글에 들어가므로(contents/guide.txt 참고)
+   글마다 CSS를 복사하지 않도록 여기에 둔다. 마크업만 붙이면 된다. */
+.post-body .cta{
+    margin:44px 0 0; padding:32px 24px;
+    background:var(--soft); border:1px solid var(--line); text-align:center}
+.post-body .cta-copy{font-size:.9em; color:var(--muted); margin:0 0 18px}
+.post-body .cta-btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:10px;
+    max-width:100%; padding:15px 34px;
+    background:var(--accent); color:#fff;
+    font-weight:700; line-height:1.2; text-decoration:none;
+    transition:opacity .15s ease}
+.post-body .cta-btn:hover{opacity:.85; color:#fff; text-decoration:none}
+.post-body .cta-btn:focus-visible{outline:3px solid var(--accent); outline-offset:3px}
+.post-body .cta-btn svg{flex:none}
+
 @media (max-width:640px){
     .post-body th,.post-body td{padding:10px 12px; font-size:.85rem}
     .post-body .scroll-hint{display:block}
+    .post-body .cta{padding:26px 18px}
+    .post-body .cta-btn{display:flex; width:100%; padding:16px 20px}
+}
+@media (prefers-reduced-motion:reduce){
+    .post-body .cta-btn{transition:none}
 }
 
 .back-link{margin-top:40px}

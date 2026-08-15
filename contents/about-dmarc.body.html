@@ -29,7 +29,6 @@
   --ink:#16181d;
   --ink-soft:#3d444f;
   --ink-muted:#6b7482;
-  --panel:#f5f6f8;
   --rule:#e2e5ea;
   --accent-ink:#1a4fa0;
   --accent-soft:#eaf0f9;
@@ -120,28 +119,11 @@
 /* 표는 style.css 의 .post-body table 공통 스타일을 그대로 쓴다.
    열이 많은 태그 표만 table-wide 로 최소 너비를 준다(마크업 쪽 클래스). */
 
-/* ── 마무리 CTA ── */
 .post-body .contact{
   border-top:1px solid var(--rule);
   margin-top:56px;padding-top:28px;
   font-size:15px;color:var(--ink-soft);
 }
-.post-body .cta{
-  margin-top:36px;padding:32px 24px;
-  background:var(--panel);border:1px solid var(--rule);
-  text-align:center;
-}
-.post-body .cta-copy{font-size:14px;color:var(--ink-muted);margin:0 0 18px}
-.post-body .cta-btn{
-  display:inline-flex;align-items:center;gap:10px;
-  background:var(--accent-ink);color:#fff;
-  font-size:15px;font-weight:700;
-  padding:15px 34px;text-decoration:none;
-  border:0;transition:background .15s ease,transform .15s ease;
-}
-.post-body .cta-btn:hover{background:#143d7d;transform:translateY(-1px);text-decoration:none}
-.post-body .cta-btn:focus-visible{outline:3px solid var(--accent-ink);outline-offset:3px}
-.post-body .cta-btn svg{flex:none}
 
 /* ── 모바일 ── */
 @media (max-width:640px){
@@ -149,15 +131,6 @@
   .post-body h2{margin:48px 0 14px}
   .post-body pre{font-size:13px;padding:14px}
   /* 표 축소와 scroll-hint 표시는 style.css 공통 스타일이 같은 폭에서 처리한다 */
-  .post-body .cta{padding:26px 18px}
-  .post-body .cta-btn{width:100%;justify-content:center;padding:16px 20px}
-}
-@media (prefers-reduced-motion:reduce){
-  .post-body .cta-btn{transition:none}
-  .post-body .cta-btn:hover{transform:none}
-}
-@media print{
-  .post-body .cta{display:none}
 }
 </style>
 
@@ -403,7 +376,7 @@
 </div>
 
 <div class="cta">
-  <p class="cta-copy">SPF·DKIM·DMARC 설정을 지원하는 대량메시징 플랫폼</p>
+  <p class="cta-copy">이메일, 문자, FAX, 카카오 비즈메시지를 한 번에</p>
   <a class="cta-btn" href="https://www.maillink.co.kr?r=tech">
     메일링크 바로가기
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">

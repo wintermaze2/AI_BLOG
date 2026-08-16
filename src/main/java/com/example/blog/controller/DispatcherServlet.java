@@ -6,6 +6,7 @@ import com.example.blog.dao.TagDao;
 import com.example.blog.model.Category;
 import com.example.blog.model.Post;
 import com.example.blog.model.Tag;
+import com.example.blog.util.JsonLd;
 import com.example.blog.util.SiteConfig;
 import com.example.blog.util.UrlUtil;
 
@@ -18,7 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -53,6 +54,12 @@ public class DispatcherServlet extends HttpServlet {
 
         req.setAttribute("baseUrl", SiteConfig.baseUrl());
         req.setAttribute("siteName", SiteConfig.siteName());
+        // 소유확인 토큰은 모든 공개 페이지에 실어 둔다(검색엔진은 보통 홈만 확인하지만
+        // 어느 URL로 확인하든 통과하도록).
+        req.setAttribute("googleSiteVerification", SiteConfig.googleSiteVerification());
+        req.setAttribute("naverSiteVerification", SiteConfig.naverSiteVerification());
+        // 글 상세에서는 대표 이미지로 덮어쓴다.
+        req.setAttribute("ogImage", SiteConfig.defaultOgImage());
 
         try {
             if (path.equals("/")) {
@@ -79,6 +86,9 @@ public class DispatcherServlet extends HttpServlet {
             throws ServletException, IOException {
         int page = parsePage(req.getParameter("page"));
         int offset = (page - 1) * PAGE_SIZE;
+
+        // 홈에만 WebSite + 사이트 내 검색 구조화 데이터를 넣는다(1페이지 한정).
+        if (page == 1) req.setAttribute("jsonLd", JsonLd.webSite());
 
         renderList(req, resp, page,
                 postDao.findPublished(offset, PAGE_SIZE),
@@ -220,41 +230,24 @@ public class DispatcherServlet extends HttpServlet {
                 post.getMetaDescription() != null ? post.getMetaDescription() : post.getSummary());
         String url = SiteConfig.baseUrl() + UrlUtil.encodePath("/posts/" + post.getSlug());
         req.setAttribute("canonical", url);
-        req.setAttribute("jsonLd", buildJsonLd(post, url));
+        req.setAttribute("jsonLd", JsonLd.blogPosting(post, url));
+
+        // 이동 경로: 홈 > (카테고리) > 글
+        List<String[]> trail = new ArrayList<>();
+        if (post.getCategoryName() != null && post.getCategorySlug() != null) {
+            trail.add(new String[]{
+                    post.getCategoryName(),
+                    SiteConfig.baseUrl() + UrlUtil.encodePath("/category/" + post.getCategorySlug())});
+        }
+        trail.add(new String[]{post.getTitle(), url});
+        req.setAttribute("jsonLdBreadcrumb", JsonLd.breadcrumb(trail));
+
+        // 대표 이미지가 없으면 사이트 기본 이미지로 대체(설정되어 있을 때만)
+        req.setAttribute("ogImage",
+                (post.getThumbnailUrl() != null && !post.getThumbnailUrl().isBlank())
+                        ? post.getThumbnailUrl() : SiteConfig.defaultOgImage());
+
         forward(req, resp, "/WEB-INF/views/post/detail.jsp");
-    }
-
-    /** BlogPosting 구조화 데이터(JSON-LD)를 안전하게 문자열로 생성. */
-    private String buildJsonLd(Post p, String url) {
-        DateTimeFormatter iso = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-        String pub = p.getPublishedAt() != null ? p.getPublishedAt().format(iso) : "";
-        String mod = p.getUpdatedAt()   != null ? p.getUpdatedAt().format(iso)   : pub;
-        String desc = p.getMetaDescription() != null ? p.getMetaDescription()
-                : (p.getSummary() != null ? p.getSummary() : "");
-        String site = SiteConfig.siteName();
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("{")
-          .append("\"@context\":\"https://schema.org\",")
-          .append("\"@type\":\"BlogPosting\",")
-          .append("\"headline\":\"").append(jsonEsc(p.getTitle())).append("\",")
-          .append("\"description\":\"").append(jsonEsc(desc)).append("\",")
-          .append("\"url\":\"").append(jsonEsc(url)).append("\",")
-          .append("\"mainEntityOfPage\":\"").append(jsonEsc(url)).append("\",");
-        if (!pub.isEmpty()) sb.append("\"datePublished\":\"").append(pub).append("\",");
-        if (!mod.isEmpty()) sb.append("\"dateModified\":\"").append(mod).append("\",");
-        if (p.getThumbnailUrl() != null && !p.getThumbnailUrl().isBlank())
-            sb.append("\"image\":\"").append(jsonEsc(p.getThumbnailUrl())).append("\",");
-        sb.append("\"author\":{\"@type\":\"Organization\",\"name\":\"").append(jsonEsc(site)).append("\"},")
-          .append("\"publisher\":{\"@type\":\"Organization\",\"name\":\"").append(jsonEsc(site)).append("\"}")
-          .append("}");
-        return sb.toString();
-    }
-
-    private String jsonEsc(String s) {
-        if (s == null) return "";
-        return s.replace("\\", "\\\\").replace("\"", "\\\"")
-                .replace("</", "<\\/").replace("\n", " ").replace("\r", " ");
     }
 
     private void notFound(HttpServletRequest req, HttpServletResponse resp)

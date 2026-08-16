@@ -3,6 +3,11 @@
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <jsp:include page="/WEB-INF/views/layout/header.jsp"/>
 
+<%-- 홈 1페이지에서만: WebSite + 사이트 내 검색 구조화 데이터 --%>
+<c:if test="${not empty jsonLd}">
+<script type="application/ld+json">${jsonLd}</script>
+</c:if>
+
 <h1 class="page-title">${fn:escapeXml(heading)}</h1>
 
 <%-- 카테고리/태그/검색 결과일 때만: 글 수 + 전체 목록으로 돌아가는 링크 --%>

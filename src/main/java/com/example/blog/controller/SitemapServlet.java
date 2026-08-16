@@ -39,8 +39,14 @@ public class SitemapServlet extends HttpServlet {
         try (PrintWriter out = resp.getWriter()) {
             out.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
             out.println("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">");
-            // 홈
-            out.println("  <url><loc>" + esc(base) + "/</loc><changefreq>daily</changefreq></url>");
+            // 홈. lastmod 는 가장 최근 글의 수정 시각을 쓴다(목록이 그때 바뀌므로).
+            String homeLastmod = posts.stream()
+                    .map(Post::getUpdatedAt).filter(java.util.Objects::nonNull)
+                    .max(java.time.LocalDateTime::compareTo)
+                    .map(W3C::format).orElse(null);
+            out.println("  <url><loc>" + esc(base) + "/</loc>"
+                    + (homeLastmod != null ? "<lastmod>" + homeLastmod + "</lastmod>" : "")
+                    + "<changefreq>daily</changefreq></url>");
             // 각 글
             for (Post p : posts) {
                 out.println("  <url>");

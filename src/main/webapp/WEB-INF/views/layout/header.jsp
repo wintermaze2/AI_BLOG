@@ -28,10 +28,26 @@
     <meta property="og:url" content="${fn:escapeXml(canonical)}">
     </c:if>
     <meta property="og:type" content="${not empty post ? 'article' : 'website'}">
-    <c:if test="${not empty post and not empty post.thumbnailUrl}">
-    <meta property="og:image" content="${fn:escapeXml(post.thumbnailUrl)}">
-    </c:if>
+    <%-- 글의 대표 이미지가 없으면 서블릿이 사이트 기본 이미지(BLOG_DEFAULT_OG_IMAGE)를 넣어준다.
+         이미지가 아예 없으면 twitter:card 도 summary 로 낮춘다.
+         큰 카드로 선언해 놓고 이미지가 없으면 공유 시 빈 영역만 남는다. --%>
+    <c:choose>
+        <c:when test="${not empty ogImage}">
+    <meta property="og:image" content="${fn:escapeXml(ogImage)}">
     <meta name="twitter:card" content="summary_large_image">
+        </c:when>
+        <c:otherwise>
+    <meta name="twitter:card" content="summary">
+        </c:otherwise>
+    </c:choose>
+
+    <%-- 검색엔진 소유확인. 토큰이 설정된 경우에만 출력한다. --%>
+    <c:if test="${not empty googleSiteVerification}">
+    <meta name="google-site-verification" content="${fn:escapeXml(googleSiteVerification)}">
+    </c:if>
+    <c:if test="${not empty naverSiteVerification}">
+    <meta name="naver-site-verification" content="${fn:escapeXml(naverSiteVerification)}">
+    </c:if>
 
     <link rel="icon" type="image/png"
           href="${pageContext.request.contextPath}/static/img/logo-bg-trans.png">

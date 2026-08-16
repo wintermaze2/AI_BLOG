@@ -5,6 +5,32 @@
 
 ---
 
+## 2026-08-15
+
+### SEO
+
+**검색엔진 등록 준비 및 구조화 데이터 보강** `pending`
+- 배포된 사이트를 실제로 조회해 점검. 등록 전 고쳐야 할 것 두 가지 발견
+  - 슬러그 오타 `hot-to-set-dns` (how 의 오타). 색인 후에는 URL 변경 비용이 크므로 지금 수정
+  - 발행 글 5편 모두 카테고리 미지정 → 카테고리 아카이브가 비어 sitemap 에도 없음
+- 소유확인 meta 지원: BLOG_GOOGLE_SITE_VERIFICATION / BLOG_NAVER_SITE_VERIFICATION.
+  토큰이 없으면 태그를 아예 출력하지 않는다
+- `util/JsonLd` 신설. DispatcherServlet 에 흩어져 있던 문자열 조립을 옮기고
+  이스케이프를 한 곳으로 모음. `</script>` 는 `<` 로 치환해 스크립트 조기 종료 차단
+  - 글 상세에 BreadcrumbList 추가, 홈 1페이지에 WebSite + SearchAction 추가
+  - BlogPosting 에 articleSection(카테고리), keywords(태그) 추가
+- og:image 가 없으면 twitter:card 를 summary 로 낮춤.
+  large 로 선언해 놓고 이미지가 없으면 공유 시 빈 영역만 남기 때문
+- publisher.logo 와 기본 og:image 는 **설정했을 때만** 출력.
+  파비콘용 로고(50x37)는 두 용도 모두에 작아 구글 경고를 유발한다
+- sitemap 홈 항목에 lastmod 추가(최근 글 수정 시각)
+- SiteConfig 기본 사이트 설명을 개발용 문구에서 실제 주제에 맞게 교체
+- SEO.md 신설 — 등록 전 점검, 환경변수, 구글/네이버 등록 절차, 등록 후 확인
+- 검증: JSON-LD 4종이 유효한 JSON 인지 자체 파서로 확인, esc() 6개 케이스
+  (`</script>` 무력화, 따옴표·역슬래시·개행·제어문자·null). mvn/JspC 통과
+
+---
+
 ## 2026-08-14
 
 ### 보안

@@ -7,6 +7,9 @@
 <c:if test="${not empty jsonLd}">
 <script type="application/ld+json">${jsonLd}</script>
 </c:if>
+<c:if test="${not empty jsonLdBreadcrumb}">
+<script type="application/ld+json">${jsonLdBreadcrumb}</script>
+</c:if>
 
 <article class="post-detail">
     <header class="post-header">

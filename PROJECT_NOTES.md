@@ -53,6 +53,8 @@
 ```
 blog/
 ├── pom.xml                     # 의존성 + 빌드 (finalName=blog)
+├── SEO.md                      # 검색엔진 등록 절차
+├── CHANGELOG.md                # 변경 이력
 ├── sql/schema.sql              # 스키마 + 샘플 데이터
 ├── deploy 관련은 서버 ~/deploy.sh
 └── src/main/
@@ -63,8 +65,8 @@ blog/
     │   ├── dao/         PostDao, CategoryDao, TagDao, AdminUserDao
     │   ├── model/       Post, Category, Tag, AdminUser
     │   ├── tool/        GenerateHash (BCrypt 해시 생성 CLI)
-    │   └── util/        Database(HikariCP), MarkdownUtil, SlugUtil, UrlUtil,
-    │                    SiteConfig, PasswordUtil, AppContextListener
+    │   └── util/        Database(HikariCP), MarkdownUtil, SlugUtil, UrlUtil, JsonLd,
+    │                    RateLimiter, SiteConfig, PasswordUtil, AppContextListener
     └── webapp/
         ├── WEB-INF/web.xml
         ├── WEB-INF/views/  layout/(header,footer,fonts), post/(list,detail),
@@ -93,9 +95,13 @@ blog/
     순서가 뒤바뀌면 컬럼이 없어 모든 페이지가 500을 낸다.
 
 ## 7. SEO 처리 (중요)
+
+> 검색엔진 등록 절차와 등록 전 점검 사항은 [SEO.md](SEO.md) 에 별도로 정리했습니다.
 - 예쁜 URL: `/posts/{slug}` (slug 컬럼)
 - 글마다 `<title>`, `meta description`, `canonical`, Open Graph/Twitter (header.jsp)
-- **JSON-LD(BlogPosting)** 는 `DispatcherServlet.buildJsonLd()` 에서 안전하게 생성해 detail.jsp에 주입
+- **JSON-LD**는 `util/JsonLd` 에서 생성한다(이스케이프를 한 곳에 모아 `</script>` 주입을 막음).
+  - 글 상세: `BlogPosting` + `BreadcrumbList`
+  - 홈 1페이지: `WebSite` + `SearchAction`(사이트 내 검색)
 - 동적 `sitemap.xml`(글 + **발행 글이 있는** 카테고리/태그 아카이브), `rss.xml`
 - slug에 한글이 허용되므로 문서에 박히는 절대 URL(canonical/OG/sitemap/RSS)은 `UrlUtil.encodePath()`로
   퍼센트 인코딩한다. 반대로 들어오는 요청은 `getRequestURI()`가 인코딩된 원문이라
@@ -142,8 +148,10 @@ bash deployremote.sh         # 로컬 mvn package → scp → 서버 Tomcat 재�
 ```
 빌드 산출물이 없으면 전송 전에 중단하므로 서버는 그대로 유지됩니다.
 런타임 접속정보는 **환경변수**로 주입 (`/etc/systemd/system/tomcat.service` [Service]):
-`BLOG_DB_URL, BLOG_DB_USER, BLOG_DB_PASS, BLOG_BASE_URL, BLOG_SITE_NAME, BLOG_ADMIN_ALLOWED_IPS,
- BLOG_SEARCH_RATE_PER_MIN, BLOG_SEARCH_RATE_BURST`
+`BLOG_DB_URL, BLOG_DB_USER, BLOG_DB_PASS, BLOG_BASE_URL, BLOG_SITE_NAME, BLOG_SITE_DESC,
+ BLOG_ADMIN_ALLOWED_IPS, BLOG_SEARCH_RATE_PER_MIN, BLOG_SEARCH_RATE_BURST,
+ BLOG_GOOGLE_SITE_VERIFICATION, BLOG_NAVER_SITE_VERIFICATION,
+ BLOG_DEFAULT_OG_IMAGE, BLOG_LOGO_URL`
 → 값 변경 시 `sudo systemctl daemon-reload && sudo systemctl restart tomcat`.
 미설정 시 `Database.java`/`SiteConfig.java`의 기본값 사용.
 

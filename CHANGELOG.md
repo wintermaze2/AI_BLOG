@@ -22,6 +22,11 @@
     `/apple-touch-icon.png` (180x180)
   - 브라우저와 iOS 가 관례적으로 찾는 경로와 같게 두어, 선언을 못 읽어도 잡힌다
 - 헤더에 보이는 브랜드 로고는 그대로 둔다. 파비콘과 용도가 다르다
+- **web.xml 매핑 필수**: DispatcherServlet 이 `/` 를 잡으므로 루트 정적 파일은
+  경로마다 default 서블릿 매핑을 넣어야 한다. 처음엔 파일만 두고 매핑을 빼먹어
+  `/favicon-192.png` 와 `/apple-touch-icon.png` 가 404 였다(1차 배포 후 발견).
+  `/favicon.ico` 는 매핑이 이미 있어 정상이었다.
+  앞으로 루트에 정적 파일을 추가할 때마다 web.xml 에 함께 등록해야 한다
 - 부수 효과: 192x192 가 구글 publisher 로고 최소 크기(112px)를 넘으므로
   이제 `BLOG_LOGO_URL` 을 설정할 수 있다. SEO.md 에 반영.
   `BLOG_DEFAULT_OG_IMAGE` 는 1200x630 가로 이미지가 따로 필요해 여전히 보류

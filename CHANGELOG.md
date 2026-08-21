@@ -2,6 +2,9 @@
 
 > 날짜순 작업 기록입니다. **현재 구조·규약**은 [PROJECT_NOTES.md](PROJECT_NOTES.md)를 보세요.
 > 이 문서는 "언제 무엇을 왜 바꿨는지", 그리고 **어디까지 검증했는지**를 남깁니다.
+>
+> 항목 뒤 표시는 운영 반영 상태입니다.
+> `pending` 코드/문서만 바뀐 상태 · `applied` 운영 서버(DB 또는 WAR)까지 반영됨
 
 ---
 
@@ -17,7 +20,7 @@
 
 ### 콘텐츠 / DB
 
-**카테고리 '이메일 보안' 추가, 샘플 카테고리 제거** `pending`
+**카테고리 '이메일 보안' 추가, 샘플 카테고리 제거** `applied 2026-08-21`
 - 운영 카테고리를 `이메일 인증`(email-auth), `이메일 작성팁`(sending-tips),
   `이메일 보안`(email-security) 셋으로 정리
 - 샘플 데이터(카테고리 `개발`/`일상`, 글 hello-world/second-post)를 schema.sql 에서 제거
@@ -26,9 +29,9 @@
     새 id 를 받으므로 id 1 이 없어 FK 제약 위반으로 실패한다
 - SEO.md §0 (2) 갱신 — "카테고리 미지정" 전제가 낡아서 현재 카테고리 표로 교체.
   slug 변경은 색인 후 404 를 만든다는 경고 추가(301 리다이렉트 기능 없음)
-- 검증: schema.sql 은 **아직 운영 DB 에 적용 전**. 적용 시 실행할 SQL 은
+- 검증: **운영 DB 반영 완료(2026-08-21)**. 실행한 SQL 두 건은
   카테고리 추가(INSERT ... ON DUPLICATE KEY UPDATE)와
-  삭제(DELETE FROM category WHERE slug IN ('dev','life')) 두 건.
+  삭제(DELETE FROM category WHERE slug IN ('dev','life')).
   post.category_id 는 `ON DELETE SET NULL` 이라 글은 남고 카테고리만 해제된다
 
 ---

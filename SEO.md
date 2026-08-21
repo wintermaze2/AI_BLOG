@@ -92,8 +92,18 @@ sudo systemctl daemon-reload && sudo systemctl restart tomcat
 토큰이 비어 있으면 해당 meta 태그를 아예 출력하지 않습니다. 빈 태그가 남지 않습니다.
 
 **주의**: `BLOG_DEFAULT_OG_IMAGE` 와 `BLOG_LOGO_URL` 은 미설정이 기본입니다.
-파비콘용 로고(50x37)는 두 용도 모두에 너무 작아, 잘못 넣으면
-구글이 "로고가 작다" 경고를 냅니다. 제대로 된 이미지를 만든 뒤 설정하세요.
+헤더 로고(50x37)는 두 용도 모두에 너무 작아, 잘못 넣으면
+구글이 "로고가 작다" 경고를 냅니다.
+
+`BLOG_LOGO_URL` 은 이제 설정할 수 있습니다. 2026-08-21 에 추가한 파비콘
+192x192 가 구글의 publisher 로고 최소 크기(112px)를 넘습니다.
+
+```ini
+Environment="BLOG_LOGO_URL=https://tech.maillink.co.kr/favicon-192.png"
+```
+
+`BLOG_DEFAULT_OG_IMAGE` 는 여전히 보류입니다. 공유 미리보기용 1200x630
+가로 이미지가 필요한데, 정사각형 파비콘을 넣으면 잘려서 나옵니다.
 
 ---
 
@@ -155,6 +165,31 @@ https://tech.maillink.co.kr/sitemap.xml
 
 - 리치 결과 테스트: https://search.google.com/test/rich-results
 - 스키마 검증: https://validator.schema.org/
+
+### 검색결과 파비콘
+
+구글은 **정사각형** 아이콘만 검색결과에 노출하며 48의 배수를 권장합니다.
+2026-08-21 이전에는 헤더 로고(50x37)를 파비콘으로 선언하고 있어 정사각형
+조건에 걸려 기본 아이콘이 대신 나왔습니다. 지금은 아래 세 파일을 WAR 루트에
+두고 홈 `<head>` 에서 선언합니다.
+
+| 경로 | 크기 | 용도 |
+|---|---|---|
+| `/favicon.ico` | 16~256 6종 | 브라우저 기본 요청 경로 |
+| `/favicon-192.png` | 192x192 | 구글 검색결과 |
+| `/apple-touch-icon.png` | 180x180 | iOS 홈 화면 |
+
+배포 후 확인:
+
+```bash
+curl -sI https://tech.maillink.co.kr/favicon-192.png | head -1
+curl -s https://tech.maillink.co.kr/ | grep -i 'rel="icon"\|apple-touch'
+```
+
+검색결과 반영은 구글이 홈을 다시 크롤링해야 하므로 **며칠에서 몇 주**가
+걸립니다. Search Console 의 URL 검사로 홈 색인을 요청하면 조금 빨라집니다.
+`robots.txt` 가 아이콘 경로를 막지 않아야 하는데, 현재 `Disallow` 는
+`/admin/` 뿐이라 문제없습니다.
 
 ### 공유 미리보기
 

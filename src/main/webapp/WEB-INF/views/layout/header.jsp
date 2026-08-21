@@ -49,8 +49,14 @@
     <meta name="naver-site-verification" content="${fn:escapeXml(naverSiteVerification)}">
     </c:if>
 
-    <link rel="icon" type="image/png"
-          href="${pageContext.request.contextPath}/static/img/logo-bg-trans.png">
+    <%-- 파비콘. 구글은 정사각형 아이콘만 검색결과에 노출하고 48의 배수를 권장한다.
+         기존 로고(50x37)는 정사각형이 아니라 기본 아이콘으로 대체되고 있었다.
+         .ico 와 apple-touch-icon 은 브라우저가 관례적으로 찾는 경로에도 두었다. --%>
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="192x192"
+          href="${pageContext.request.contextPath}/favicon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180"
+          href="${pageContext.request.contextPath}/apple-touch-icon.png">
     <%@ include file="/WEB-INF/views/layout/fonts.jsp" %>
     <%-- 화면 상단 메뉴에서는 뺐지만, 피드 자동 검색용 link는 유지한다(/rss.xml 정상 동작) --%>
     <link rel="alternate" type="application/rss+xml"

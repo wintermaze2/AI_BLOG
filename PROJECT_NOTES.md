@@ -55,7 +55,7 @@ blog/
 ├── pom.xml                     # 의존성 + 빌드 (finalName=blog)
 ├── SEO.md                      # 검색엔진 등록 절차
 ├── CHANGELOG.md                # 변경 이력
-├── sql/schema.sql              # 스키마 + 샘플 데이터
+├── sql/schema.sql              # 스키마 + 카테고리 초기 데이터
 ├── deploy 관련은 서버 ~/deploy.sh
 └── src/main/
     ├── java/com/example/blog/

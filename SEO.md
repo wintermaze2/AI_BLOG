@@ -22,23 +22,35 @@ DNS 설정 글의 슬러그가 `hot-to-set-dns` 로 등록되어 있습니다. `
 관리자 > 해당 글 수정 > Slug 를 `how-to-set-dns` 로 바꾸고 저장하세요.
 아직 이 URL을 링크하는 글이 없어 지금 고치면 부작용이 없습니다.
 
-### (2) 카테고리 미지정
+### (2) 카테고리
 
-발행된 5편 모두 카테고리가 비어 있습니다. 그래서
+`2026-08-21` 기준으로 아래 세 개를 씁니다. 관리자 화면에 카테고리를 만드는
+기능이 없으므로, 추가·변경은 [sql/schema.sql](sql/schema.sql) 의
+"카테고리 초기 데이터" 블록을 고치고 DB에 직접 반영합니다.
+
+| 이름 | slug | 아카이브 URL |
+|---|---|---|
+| 이메일 인증 | `email-auth` | `/category/email-auth` |
+| 이메일 작성팁 | `sending-tips` | `/category/sending-tips` |
+| 이메일 보안 | `email-security` | `/category/email-security` |
+
+기본 카테고리 `개발`(dev) / `일상`(life) 은 이 블로그 주제와 맞지 않아 삭제했습니다.
+
+**글마다 카테고리가 지정되어 있는지 확인하세요.** 비어 있으면
 
 - 글 상세·목록에 카테고리 표시가 안 나옴
-- `/category/{slug}` 아카이브가 비어 있고 sitemap에도 안 들어감
+- `/category/{slug}` 아카이브가 비고 sitemap 에도 안 들어감
+  (발행 글 0건인 카테고리는 의도적으로 제외됩니다)
 - 내부 링크 구조가 약해짐 (검색엔진이 주제 묶음을 파악하기 어려움)
 
-관리자에서 글마다 카테고리를 지정하세요. 기본 카테고리(`개발`, `일상`)는
-이 블로그 주제와 맞지 않으므로 아래처럼 새로 만드는 편이 낫습니다.
-
 ```sql
-INSERT INTO category (name, slug) VALUES
-  ('이메일 인증', 'email-auth'),
-  ('발송 노하우', 'sending-tips')
-ON DUPLICATE KEY UPDATE name = VALUES(name);
+SELECT c.name, c.slug, SUM(p.status = 'PUBLISHED') AS 발행글
+  FROM category c LEFT JOIN post p ON p.category_id = c.id
+ GROUP BY c.id, c.name, c.slug ORDER BY c.id;
 ```
+
+**카테고리는 색인 전에 확정하세요.** 색인이 시작된 뒤 slug 를 바꾸면
+아카이브 URL 이 404 가 되는데, 이 블로그에는 301 리다이렉트가 없습니다.
 
 ### (3) 사이트 설명 확인
 

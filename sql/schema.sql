@@ -96,35 +96,18 @@ EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
 -- =====================================================================
--- 샘플 데이터
+-- 카테고리 초기 데이터
+--
+-- 관리자 화면에는 카테고리를 만드는 기능이 없다(글 작성 시 고르기만 한다).
+-- 실제로 쓰는 카테고리는 여기서 관리한다. 여러 번 실행해도 안전하다.
+--
+-- 2026-08-21: 샘플 데이터(카테고리 '개발'/'일상', 글 hello-world/second-post)를
+--   제거했다. 운영 DB에서 두 카테고리를 지웠는데, 샘플 글 INSERT 가
+--   category_id = 1 을 하드코딩하고 있어 이 파일을 재실행하면 FK 위반이 났다.
+--   AUTO_INCREMENT 로 재생성되는 id 는 1 이 아니기 때문이다.
 -- =====================================================================
 INSERT INTO category (name, slug) VALUES
-    ('개발', 'dev'),
-    ('일상', 'life')
+    ('이메일 인증',   'email-auth'),
+    ('이메일 작성팁', 'sending-tips'),
+    ('이메일 보안',   'email-security')
 ON DUPLICATE KEY UPDATE name = VALUES(name);
-
-INSERT INTO post (slug, title, summary, content_md, content_html, meta_description, status, category_id, published_at)
-VALUES
-(
-    'hello-world',
-    '첫 번째 글: 블로그를 시작하며',
-    '자체 구축한 경량 JSP 블로그의 첫 글입니다.',
-    '# 안녕하세요\n\n이 블로그는 **Tomcat + JSP + MySQL**로 직접 만들었습니다.\n\n- SEO 태그 자유 제어\n- JSON-LD 구조화 데이터\n- 동적 sitemap / RSS',
-    '<h1>안녕하세요</h1><p>이 블로그는 <strong>Tomcat + JSP + MySQL</strong>로 직접 만들었습니다.</p><ul><li>SEO 태그 자유 제어</li><li>JSON-LD 구조화 데이터</li><li>동적 sitemap / RSS</li></ul>',
-    '자체 구축한 경량 JSP 블로그의 첫 글 - Tomcat, JSP, MySQL 기반',
-    'PUBLISHED',
-    1,
-    NOW()
-),
-(
-    'second-post',
-    'Markdown으로 글쓰기',
-    '이 블로그는 Markdown 원문을 HTML로 변환해 저장합니다.',
-    '## Markdown 지원\n\n코드 블록도 됩니다.\n\n```java\nSystem.out.println("Hello, Blog!");\n```',
-    '<h2>Markdown 지원</h2><p>코드 블록도 됩니다.</p><pre><code class="language-java">System.out.println("Hello, Blog!");</code></pre>',
-    'Markdown으로 글을 작성하고 HTML로 변환해 저장하는 방법',
-    'PUBLISHED',
-    1,
-    NOW()
-)
-ON DUPLICATE KEY UPDATE title = VALUES(title);

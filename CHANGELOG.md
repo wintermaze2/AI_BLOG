@@ -5,6 +5,34 @@
 
 ---
 
+## 2026-08-21
+
+### 스타일
+
+**본문 h4 스타일 추가** `pending`
+- `.post-body` 헤딩 규칙이 h1~h3 만 잡고 있어 h4 가 브라우저 기본값으로 렌더링됐다.
+  기본 h4 는 본문(1rem)보다 작아져 h3 와 본문 사이 단계가 성립하지 않는다
+- h4 를 규칙에 넣고 `font-size:1.02rem` 로 올림.
+  ARC / 이메일 헤더 분석 글이 h4 를 쓰므로 **WAR 재배포 후에** 발행해야 한다
+
+### 콘텐츠 / DB
+
+**카테고리 '이메일 보안' 추가, 샘플 카테고리 제거** `pending`
+- 운영 카테고리를 `이메일 인증`(email-auth), `이메일 작성팁`(sending-tips),
+  `이메일 보안`(email-security) 셋으로 정리
+- 샘플 데이터(카테고리 `개발`/`일상`, 글 hello-world/second-post)를 schema.sql 에서 제거
+  - **이유**: 샘플 글 INSERT 가 `category_id = 1` 을 하드코딩한다. 운영 DB 에서
+    `개발`(id 1) 을 지운 뒤 schema.sql 을 재실행하면 카테고리는 AUTO_INCREMENT 로
+    새 id 를 받으므로 id 1 이 없어 FK 제약 위반으로 실패한다
+- SEO.md §0 (2) 갱신 — "카테고리 미지정" 전제가 낡아서 현재 카테고리 표로 교체.
+  slug 변경은 색인 후 404 를 만든다는 경고 추가(301 리다이렉트 기능 없음)
+- 검증: schema.sql 은 **아직 운영 DB 에 적용 전**. 적용 시 실행할 SQL 은
+  카테고리 추가(INSERT ... ON DUPLICATE KEY UPDATE)와
+  삭제(DELETE FROM category WHERE slug IN ('dev','life')) 두 건.
+  post.category_id 는 `ON DELETE SET NULL` 이라 글은 남고 카테고리만 해제된다
+
+---
+
 ## 2026-08-15
 
 ### SEO

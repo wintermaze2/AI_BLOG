@@ -1,0 +1,334 @@
+<h2>ARC란 무엇인가?</h2>
+
+<p>ARC는 이메일이 전달·포워딩되는 과정에서 SPF나 DKIM, DMARC 인증 결과가 변경되거나 실패할 수 있는 문제를 보완하기 위한 이메일 인증 기술입니다. 이 글에서는 ARC(Authenticated Received Chain)가 무엇인지, 왜 필요한지, 이메일 포워딩 환경에서 어떤 역할을 하는지 알아봅니다.</p>
+
+<h3>ARC는 무엇을 하는 기술인가요?</h3>
+
+<p>ARC는 <strong>Authenticated Received Chain</strong>의 약자입니다. 기록하는 헤더 이름이 <code>ARC-Authentication-Results</code>라 "Authentication-Results Chain"으로 잘못 쓰이는 경우가 있지만, <a href="https://datatracker.ietf.org/doc/html/rfc8617">RFC 8617</a>이 정의한 이름은 '인증된 수신 체인'입니다. 수신 서버가 메일을 받았을 때 확인한 SPF, DKIM, DMARC 등의 인증 결과를 기록하고, 이후 다른 서버로 전달될 때 그 결과를 암호학적으로 보호하여 전달하는 기술입니다.</p>
+
+<p>쉽게 말하면 ARC는 다음과 같은 정보를 전달하는 역할을 합니다.</p>
+
+<blockquote>
+<p><strong>“이 메일이 이전 서버에 도착했을 때 인증 결과는 이러했습니다.”</strong></p>
+</blockquote>
+
+<p>이메일이 여러 서버를 거쳐 전달되면서 원래의 인증 상태를 직접 다시 검증하기 어려워지는 경우가 있습니다. ARC는 이때 신뢰할 수 있는 중간 서버가 확인한 인증 결과를 다음 서버에 전달할 수 있도록 돕습니다.</p>
+
+<h3>왜 ARC가 필요한가요?</h3>
+
+<p>ARC가 필요한 대표적인 이유는 이메일 포워딩입니다.</p>
+
+<p>일반적인 이메일 전달은 다음과 같은 구조입니다.</p>
+
+<pre><code>발신 서버
+   ↓
+수신 서버
+   ↓
+사용자</code></pre>
+
+<p>이 경우 수신 서버는 원래 발신 서버의 IP 주소와 DKIM 서명을 기준으로 SPF와 DKIM을 검증할 수 있습니다.</p>
+
+<p>하지만 이메일이 중간 서버를 거쳐 전달되는 경우 상황이 달라집니다.</p>
+
+<pre><code>발신 서버
+   ↓
+포워딩 서버
+   ↓
+최종 수신 서버
+   ↓
+사용자</code></pre>
+
+<p>최종 수신 서버 입장에서는 직접 연결한 서버가 원래 발신 서버가 아니라 포워딩 서버가 됩니다. 이 과정에서 SPF 검증이 실패하거나 DKIM 서명이 변경될 가능성이 있습니다.</p>
+
+<h3>이메일 포워딩은 왜 SPF를 실패하게 만들까요?</h3>
+
+<p>SPF는 기본적으로 메일을 전송하는 서버의 IP 주소가 해당 도메인에서 메일을 보낼 수 있도록 허용되어 있는지를 확인합니다.</p>
+
+<p>예를 들어 원래 메일이 다음과 같이 발송되었다고 가정해 보겠습니다.</p>
+
+<pre><code>example.com
+   ↓
+공식 발송 서버 203.0.113.10
+   ↓
+수신 서버</code></pre>
+
+<p>수신 서버가 <code>203.0.113.10</code>의 IP를 확인하고 SPF 레코드와 비교하면 정상적으로 <code>spf=pass</code>가 될 수 있습니다.</p>
+
+<p>그런데 중간에 포워딩 서버가 추가되면 다음과 같이 됩니다.</p>
+
+<pre><code>example.com
+   ↓
+공식 발송 서버
+   ↓
+포워딩 서버 198.51.100.20
+   ↓
+최종 수신 서버</code></pre>
+
+<p>최종 수신 서버는 직접 연결한 포워딩 서버의 IP를 기준으로 SPF를 검증할 수 있습니다. 포워딩 서버가 원래 도메인의 SPF 정책에 포함되어 있지 않다면 SPF 검증이 실패할 수 있습니다.</p>
+
+<h3>DKIM도 포워딩 과정에서 영향을 받을 수 있습니다</h3>
+
+<p>DKIM은 이메일 헤더와 본문의 일부를 전자서명합니다. 따라서 중간 서버가 서명된 내용을 변경하면 DKIM 검증이 실패할 수 있습니다.</p>
+
+<p>예를 들어 포워딩 과정에서 다음과 같은 변경이 발생할 수 있습니다.</p>
+
+<ul>
+<li>본문에 안내 문구가 추가되는 경우</li>
+<li>메일링 리스트 서버가 제목을 변경하는 경우</li>
+<li>첨부파일이나 본문이 변환되는 경우</li>
+<li>중간 보안 장비가 메시지 내용을 수정하는 경우</li>
+</ul>
+
+<p>물론 모든 포워딩이 DKIM을 깨뜨리는 것은 아닙니다. 메시지가 DKIM 서명 범위에 영향을 주지 않는 방식으로 전달된다면 DKIM 검증은 그대로 통과할 수 있습니다.</p>
+
+<h3>DMARC는 왜 더 큰 문제가 될 수 있나요?</h3>
+
+<p>DMARC는 SPF 또는 DKIM 인증 결과뿐 아니라 사용자가 보는 <code>From</code> 도메인과 인증 도메인의 정렬 여부를 확인합니다.</p>
+
+<p>따라서 포워딩 과정에서 SPF가 실패하고 DKIM도 변경으로 인해 실패한다면 DMARC 역시 실패할 수 있습니다.</p>
+
+<p>이것은 정상적인 메일임에도 포워딩 구조 때문에 인증이 실패하는 상황을 만들 수 있습니다.</p>
+
+<pre><code>원본 발송
+SPF = PASS
+DKIM = PASS
+DMARC = PASS
+
+        ↓ 포워딩
+
+최종 수신
+SPF = FAIL 가능
+DKIM = FAIL 가능
+DMARC = FAIL 가능</code></pre>
+
+<p>ARC는 바로 이런 상황에서 이전 서버가 확인했던 인증 결과를 다음 서버에 전달할 수 있도록 합니다.</p>
+
+<h3>ARC는 어떤 정보를 추가하나요?</h3>
+
+<p>ARC를 적용하면 일반적으로 이메일 헤더에 세 가지 종류의 ARC 관련 필드가 추가됩니다.</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>헤더</th><th>역할</th></tr>
+</thead>
+<tbody>
+<tr><td>ARC-Authentication-Results</td><td>이전 서버에서 확인한 SPF, DKIM, DMARC 등의 인증 결과를 기록합니다.</td></tr>
+<tr><td>ARC-Message-Signature</td><td>메시지와 ARC 관련 정보를 암호학적으로 서명합니다.</td></tr>
+<tr><td>ARC-Seal</td><td>ARC 체인을 연결하고 이전 ARC 결과를 보호합니다.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>ARC-Authentication-Results란?</h3>
+
+<p><code>ARC-Authentication-Results</code>는 중간 서버가 메일을 수신했을 때 확인한 인증 결과를 기록합니다.</p>
+
+<pre><code>ARC-Authentication-Results: i=1;
+    mx.forwarder.example;
+    spf=pass smtp.mailfrom=example.com;
+    dkim=pass header.d=example.com;
+    dmarc=pass header.from=example.com</code></pre>
+
+<p>이 예시는 포워딩 서버가 메일을 받았을 당시 SPF, DKIM, DMARC가 모두 통과했다는 정보를 기록한 것입니다.</p>
+
+<p>여기에서 <code>i=1</code>은 ARC 체인의 인스턴스 번호입니다.</p>
+
+<h3>ARC-Message-Signature란?</h3>
+
+<p><code>ARC-Message-Signature</code>는 메시지와 ARC 관련 정보를 서명하여 이후 전달 과정에서 변조 여부를 확인할 수 있도록 합니다.</p>
+
+<pre><code>ARC-Message-Signature: i=1; a=rsa-sha256;
+    d=forwarder.example; s=arc;
+    h=from:to:subject:date:message-id;
+    bh=...;
+    b=...</code></pre>
+
+<p>형식은 DKIM 서명과 비슷하지만 ARC 체인을 구성하기 위한 별도의 목적을 가집니다.</p>
+
+<h3>ARC-Seal은 ARC 체인의 핵심입니다</h3>
+
+<p><code>ARC-Seal</code>은 ARC 체인의 연속성과 무결성을 확인하기 위한 서명입니다.</p>
+
+<pre><code>ARC-Seal: i=1; a=rsa-sha256;
+    d=forwarder.example; s=arc;
+    cv=none;
+    b=...</code></pre>
+
+<p><code>cv</code>(chain validation)는 <strong>여기까지의 ARC 체인이 온전한지</strong>를 나타내는 값입니다. 체인이 끊어졌는지 판단하는 기준이므로 ARC 헤더를 읽을 때 가장 먼저 확인해야 합니다.</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>값</th><th>의미</th></tr>
+</thead>
+<tbody>
+<tr><td><code>cv=none</code></td><td>체인의 첫 번째 ARC 세트입니다. <code>i=1</code>은 항상 이 값입니다.</td></tr>
+<tr><td><code>cv=pass</code></td><td>앞선 ARC 체인의 검증에 성공했습니다.</td></tr>
+<tr><td><code>cv=fail</code></td><td>체인이 끊어졌습니다. 이 세트와 그 이후의 ARC 정보는 신뢰할 수 없습니다.</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>ARC가 여러 서버를 거치면 인스턴스 번호가 증가하면서 새로운 ARC 세트가 추가됩니다.</p>
+
+<pre><code>i=1 → 첫 번째 ARC 서버
+i=2 → 두 번째 ARC 서버
+i=3 → 세 번째 ARC 서버</code></pre>
+
+<p>따라서 ARC는 하나의 결과만 전달하는 것이 아니라 여러 중간 서버를 거친 인증 정보를 체인 형태로 유지할 수 있습니다.</p>
+
+<h3>ARC가 동작하는 과정을 예로 들어보겠습니다</h3>
+
+<p>다음과 같은 구조를 가정해 보겠습니다.</p>
+
+<pre><code>발신자
+   ↓
+메일 포워딩 서비스
+   ↓
+최종 수신 서비스
+   ↓
+사용자</code></pre>
+
+<h4>1. 원본 메일이 포워딩 서비스에 도착합니다</h4>
+
+<p>포워딩 서비스는 원래 발신자의 메일을 받고 SPF, DKIM, DMARC를 검증합니다.</p>
+
+<pre><code>SPF   PASS
+DKIM  PASS
+DMARC PASS</code></pre>
+
+<h4>2. 포워딩 서비스가 ARC 정보를 추가합니다</h4>
+
+<p>포워딩 서비스는 자신이 확인한 인증 결과를 <code>ARC-Authentication-Results</code>에 기록하고 ARC 서명을 추가합니다.</p>
+
+<pre><code>ARC-Authentication-Results
+ARC-Message-Signature
+ARC-Seal</code></pre>
+
+<h4>3. 최종 수신 서버가 메일을 받습니다</h4>
+
+<p>최종 수신 서버에서 직접 확인한 SPF는 포워딩 구조 때문에 실패할 수 있습니다.</p>
+
+<pre><code>SPF = FAIL</code></pre>
+
+<p>그러나 ARC 체인이 정상적으로 검증되고, 신뢰할 수 있는 중간 서버가 이전 단계에서 정상적인 인증 결과를 확인했다는 사실을 참고할 수 있습니다.</p>
+
+<h3>ARC가 있다고 DMARC를 무조건 통과하는 것은 아닙니다</h3>
+
+<p>이 부분은 매우 중요합니다. ARC는 DMARC를 대체하는 기술이 아닙니다.</p>
+
+<p>또한 ARC가 존재한다고 해서 최종 수신 서버가 반드시 ARC 정보를 신뢰하거나 DMARC 실패를 무시해야 하는 것도 아닙니다.</p>
+
+<p>최종 수신 서버는 자체 정책에 따라 다음과 같은 요소를 판단합니다.</p>
+
+<ul>
+<li>ARC 체인의 서명이 정상적인지</li>
+<li>ARC 체인이 끊기거나 변조되지 않았는지</li>
+<li>ARC를 추가한 중간 서버를 신뢰할 수 있는지</li>
+<li>원본 인증 결과가 무엇이었는지</li>
+<li>전체 발신자 평판과 메시지 위험도가 어떤지</li>
+</ul>
+
+<p>즉 ARC는 <strong>추가적인 인증 정보와 신뢰 판단의 근거를 제공하는 기술</strong>이라고 이해하는 것이 적절합니다.</p>
+
+<h3>ARC와 SPF, DKIM, DMARC의 관계</h3>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>기술</th><th>주요 역할</th></tr>
+</thead>
+<tbody>
+<tr><td>SPF</td><td>해당 도메인의 메일을 보낼 수 있는 서버인지 확인합니다.</td></tr>
+<tr><td>DKIM</td><td>메일이 특정 도메인에서 서명되었고 전송 과정에서 변조되지 않았는지 확인합니다.</td></tr>
+<tr><td>DMARC</td><td>SPF/DKIM과 From 도메인의 정렬 여부를 확인하고 정책을 적용합니다.</td></tr>
+<tr><td>ARC</td><td>중간 서버가 확인한 인증 결과를 서명하여 전달할 수 있도록 합니다.</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>따라서 ARC는 SPF, DKIM, DMARC와 경쟁하는 기술이 아니라 이메일이 복잡한 전달 경로를 거칠 때 기존 인증 결과를 보완하는 역할을 합니다.</p>
+
+<h3>ARC 헤더를 분석하는 방법</h3>
+
+<p>실제 이메일 헤더에서 ARC를 확인하려면 다음 세 가지 항목을 찾으면 됩니다.</p>
+
+<pre><code>ARC-Authentication-Results:
+ARC-Message-Signature:
+ARC-Seal:</code></pre>
+
+<p>여러 세트가 존재한다면 <code>i=</code> 값을 확인해 체인의 순서를 파악할 수 있습니다.</p>
+
+<pre><code>ARC-Authentication-Results: i=1; ...
+ARC-Message-Signature: i=1; ...
+ARC-Seal: i=1; ...
+
+ARC-Authentication-Results: i=2; ...
+ARC-Message-Signature: i=2; ...
+ARC-Seal: i=2; ...</code></pre>
+
+<p>이 경우 메일이 최소 두 단계의 ARC 처리를 거쳤다는 사실을 알 수 있습니다.</p>
+
+<h3>ARC 분석 시 확인해야 할 항목</h3>
+
+<ol>
+<li><strong>ARC-Seal이 존재하는지</strong> 확인합니다.</li>
+<li><strong>i 값이 순서대로 연결되는지</strong> 확인합니다.</li>
+<li><strong>cv 값</strong>을 확인합니다. <code>i=1</code>이 <code>cv=none</code>인지, 이후 세트가 <code>cv=pass</code>로 이어지는지 봅니다. <code>cv=fail</code>이 있으면 그 지점에서 체인이 끊긴 것입니다.</li>
+<li><strong>ARC를 생성한 도메인</strong>을 확인합니다.</li>
+<li><strong>ARC-Authentication-Results의 원본 인증 결과</strong>를 확인합니다.</li>
+<li><strong>최종 수신 서버의 Authentication-Results</strong>와 비교합니다.</li>
+<li>포워딩 과정에서 SPF 또는 DKIM 결과가 변경되었는지 확인합니다.</li>
+</ol>
+
+<h3>ARC가 특히 유용한 환경</h3>
+
+<p>ARC는 모든 일반적인 메일 전달에서 반드시 필요한 것은 아니지만 다음과 같은 환경에서 특히 의미가 있습니다.</p>
+
+<ul>
+<li>이메일 자동 포워딩 서비스</li>
+<li>메일링 리스트</li>
+<li>여러 보안 게이트웨이를 거치는 이메일 환경</li>
+<li>중간 서버가 메시지를 검사하거나 처리하는 환경</li>
+<li>기업용 메일 보안 시스템</li>
+</ul>
+
+<p>이러한 환경에서는 원본 메일이 정상적으로 인증되었더라도 중간 처리 과정 때문에 최종 수신 단계의 인증 결과가 달라질 수 있기 때문입니다.</p>
+
+<h3>ARC가 해결하지 못하는 문제도 있습니다</h3>
+
+<p>ARC는 매우 유용하지만 만능 기술은 아닙니다.</p>
+
+<ul>
+<li>악성 메일의 내용을 안전하게 만드는 기술이 아닙니다.</li>
+<li>발신자의 평판 문제를 해결하지 않습니다.</li>
+<li>스팸 필터를 우회하기 위한 기술이 아닙니다.</li>
+<li>수신 서버가 모든 ARC 서명자를 자동으로 신뢰하도록 강제하지 않습니다.</li>
+<li>DMARC 자체를 대체하지 않습니다.</li>
+</ul>
+
+<p>예를 들어 공격자가 자신의 도메인에서 SPF, DKIM, DMARC, ARC를 모두 정상적으로 구성했다고 해도 그 메일의 내용이 피싱이나 사기라면 여전히 악성 메일일 수 있습니다.</p>
+
+<h3>이메일 포워딩 환경에서는 ARC를 함께 이해해야 합니다</h3>
+
+<p>SPF, DKIM, DMARC만 이해하면 단순한 발신자 인증 구조는 설명할 수 있습니다. 하지만 실제 이메일은 자동 전달, 메일링 리스트, 보안 게이트웨이 등 다양한 중간 서버를 거칠 수 있습니다.</p>
+
+<p>이 과정에서 원본 메시지는 정상적으로 인증되었음에도 최종 수신 단계에서 인증 결과가 달라질 수 있습니다.</p>
+
+<blockquote>
+<p><strong>ARC는 이메일 포워딩 과정에서 “이 메일이 이전 단계에서는 정상적으로 인증되었다”는 정보를 암호학적으로 연결해 전달하기 위한 기술입니다.</strong></p>
+</blockquote>
+
+<p>따라서 이메일 보안과 전달성을 이해하려면 SPF, DKIM, DMARC에 이어 ARC까지 함께 살펴보는 것이 좋습니다. 특히 포워딩 서비스나 중간 메일 릴레이를 운영한다면 ARC는 이메일 인증 결과를 분석할 때 중요한 단서가 될 수 있습니다.</p>
+
+<div class="cta">
+  <p class="cta-copy">이메일, 문자, FAX, 카카오 비즈메시지를 한 번에</p>
+  <a class="cta-btn" href="https://www.maillink.co.kr?r=tech">
+    메일링크 바로가기
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="square" aria-hidden="true">
+      <path d="M5 12h14M13 6l6 6-6 6"/>
+    </svg>
+  </a>
+</div>

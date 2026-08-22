@@ -80,9 +80,9 @@ sudo systemctl show tomcat -p Environment | tr ' ' '\n' | grep BLOG_
 예시:
 
 ```ini
-Environment="BLOG_SITE_DESC=이메일 발송과 도달률, SPF·DKIM·DMARC 인증을 다루는 메일링크 기술 블로그입니다."
-Environment="BLOG_GOOGLE_SITE_VERIFICATION=여기에_구글_토큰"
-Environment="BLOG_NAVER_SITE_VERIFICATION=여기에_네이버_토큰"
+Environment="BLOG_SITE_DESC=이메일,문자메시지 등 메시징 관련 기술과 작성 및 발송 노하우를 다루는 메일링크 기술 블로그입니다"
+Environment="BLOG_GOOGLE_SITE_VERIFICATION=DmHMb3_kXS5lYS7d1a70d64LLQP71qVsuYFX2CAWICY"
+Environment="BLOG_NAVER_SITE_VERIFICATION=88d79a48efade79419e51c5814c34ec9c64f21dc"
 ```
 
 ```bash

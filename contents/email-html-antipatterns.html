@@ -1,0 +1,241 @@
+<style>
+.post-body .note{
+  border-left:3px solid var(--accent);
+  background:var(--soft);
+  padding:16px 18px;
+  margin:0 0 20px;
+}
+.post-body .note > :last-child{margin-bottom:0}
+.post-body .note-title{display:block;font-weight:700;margin-bottom:8px}
+</style>
+
+<p>웹에서는 아무 문제 없는 HTML이 이메일에서는 그대로 깨집니다. 레이아웃이 무너지거나, 태그가 통째로 제거되거나, 아예 스팸으로 분류되기도 합니다. 이 글에서는 이메일 본문에 쓰면 안 되는 HTML 태그와 CSS를 정리하고, 각각을 무엇으로 바꿔야 하는지 설명합니다.</p>
+
+<h2>이메일 HTML이 웹과 다른 이유</h2>
+
+<p>브라우저는 최신 웹 표준을 따르지만 메일 클라이언트는 그렇지 않습니다. 차이를 만드는 원인은 크게 세 가지입니다.</p>
+
+<ul>
+  <li><strong>렌더링 엔진이 다릅니다.</strong> 윈도우용 Outlook 데스크톱 버전은 2007년부터 브라우저 엔진이 아니라 <strong>워드(Word)의 문서 엔진</strong>으로 메일을 그립니다. 워드는 웹 레이아웃을 위해 만들어진 것이 아니라서 현대 CSS의 상당 부분을 그냥 무시합니다.</li>
+  <li><strong>보안상 제거됩니다.</strong> 메일은 모르는 사람이 보내오는 문서입니다. 이메일 클라이언트는 스크립트를 실행하지 않고, 외부 리소스를 불러오는 태그를 걷어냅니다.</li>
+  <li><strong>웹메일은 남의 페이지 안에 들어갑니다.</strong> Gmail이나 네이버 메일은 자기 웹페이지 한가운데에 메일 본문을 끼워 넣습니다. 그래서 문서 전체를 규정하는 태그는 살아남을 수 없습니다.</li>
+</ul>
+
+<p>결론적으로 이메일 HTML은 <strong>최대한 단순하게</strong> 작성해야 합니다. 웹에서 쓰던 최신 기법을 그대로 옮기지 말고, 꼭 필요한 태그와 속성만 남기는 것이 안전합니다.</p>
+
+<h2>절대 넣지 말아야 할 태그</h2>
+
+<p>아래 태그들은 대부분의 클라이언트에서 제거되거나 동작하지 않습니다. 효과가 없을 뿐 아니라 스팸 점수만 올라갑니다.</p>
+
+<div class="table-wrap">
+<table class="table-wide">
+  <thead><tr><th>태그</th><th>무슨 일이 생기나</th><th>대안</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>&lt;script&gt;</code></td>
+      <td>모든 주요 클라이언트가 제거합니다. 동작하지 않으면서 스팸 판정에는 강한 감점 요인이 됩니다.</td>
+      <td>메일 안에서 동작이 필요하다면 설계를 다시 하세요. 랜딩 페이지로 보내는 것이 정답입니다.</td>
+    </tr>
+    <tr>
+      <td><code>&lt;iframe&gt;</code></td>
+      <td>거의 모든 곳에서 차단됩니다. 빈 영역만 남습니다.</td>
+      <td>대표 이미지와 링크</td>
+    </tr>
+    <tr>
+      <td><code>&lt;form&gt;</code> <code>&lt;input&gt;</code></td>
+      <td>Gmail은 제거하고, 남아 있어도 제출이 되지 않는 환경이 많습니다. 수신자에게는 눌러도 반응 없는 폼이 됩니다.</td>
+      <td>설문·구독 페이지 링크</td>
+    </tr>
+    <tr>
+      <td><code>&lt;embed&gt;</code> <code>&lt;object&gt;</code></td>
+      <td>차단됩니다. 과거 악성코드 유포에 쓰였던 태그라 필터가 민감하게 반응합니다.</td>
+      <td>이미지와 링크</td>
+    </tr>
+    <tr>
+      <td><code>&lt;video&gt;</code> <code>&lt;audio&gt;</code></td>
+      <td>재생되는 클라이언트가 소수입니다. 대부분 아무것도 보이지 않습니다.</td>
+      <td>재생 버튼을 합성한 <strong>썸네일 이미지</strong>를 영상 페이지로 링크</td>
+    </tr>
+    <tr>
+      <td><code>&lt;meta http-equiv="refresh"&gt;</code></td>
+      <td>무시되며, 자동 이동은 피싱의 전형적 수법이라 위험 신호로 취급됩니다.</td>
+      <td>본문에 명시적인 링크</td>
+    </tr>
+    <tr>
+      <td><code>&lt;base&gt;</code></td>
+      <td>무시되는 경우가 많아 상대 경로 링크가 통째로 깨집니다.</td>
+      <td>모든 링크와 이미지에 <strong>절대 URL</strong> 사용</td>
+    </tr>
+    <tr>
+      <td><code>&lt;link rel="stylesheet"&gt;</code></td>
+      <td>외부 CSS는 불러오지 않습니다. 스타일이 전부 빠진 맨 HTML이 보입니다.</td>
+      <td>인라인 <code>style</code> 속성</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<p class="scroll-hint">← 표를 좌우로 밀어서 보실 수 있습니다.</p>
+
+<p>폼을 링크로 바꾸는 예시입니다.</p>
+
+<pre><code>&lt;!-- 이렇게 하지 마세요 --&gt;
+&lt;form action="https://example.com/subscribe" method="post"&gt;
+  &lt;input type="email" name="email" placeholder="이메일 주소"&gt;
+  &lt;button type="submit"&gt;구독하기&lt;/button&gt;
+&lt;/form&gt;
+
+&lt;!-- 이렇게 하세요 --&gt;
+&lt;a href="https://example.com/subscribe"
+   style="display:inline-block;padding:12px 24px;background:#2f6fed;
+          color:#ffffff;text-decoration:none;"&gt;구독 신청하기&lt;/a&gt;</code></pre>
+
+<h2>레이아웃은 div가 아니라 table로</h2>
+
+<p>웹 개발에서 <code>&lt;table&gt;</code>로 레이아웃을 잡는 것은 오래전에 사라진 관습입니다. 그런데 <strong>이메일에서는 여전히 table이 정답입니다.</strong> Outlook은 워드 엔진이 현대 레이아웃 CSS를 지원하지 않고, 네이버·다음은 본문을 자기 페이지에 끼워 넣으면서 문서 구조를 손보기 때문입니다. 같은 화면을 <code>&lt;div&gt;</code>로 짠 것과 <code>&lt;table&gt;</code>로 짠 것을 나란히 보내 보면 차이가 분명하게 드러납니다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>속성 · 태그</th><th>주요 클라이언트에서 벌어지는 일</th></tr></thead>
+  <tbody>
+    <tr><td><code>display:flex</code></td><td>Outlook 데스크톱이 무시합니다. 나란히 놓으려던 요소가 세로로 쌓입니다.</td></tr>
+    <tr><td><code>display:grid</code></td><td>Outlook 데스크톱이 무시합니다. 마찬가지로 배치가 무너집니다.</td></tr>
+    <tr><td><code>position:absolute</code> <code>fixed</code></td><td>Outlook 데스크톱이 무시합니다. 겹치게 배치한 요소가 아래로 흘러내립니다.</td></tr>
+    <tr><td><code>float</code></td><td>Outlook에서 불안정합니다. 2단 구성이 1단으로 바뀌는 일이 잦습니다.</td></tr>
+    <tr><td><code>max-width</code></td><td>Outlook 데스크톱이 무시합니다. 폭 제한이 걸리지 않아 본문이 화면 끝까지 늘어납니다.</td></tr>
+    <tr><td><code>&lt;body&gt;</code> 와 거기에 준 스타일</td><td>네이버·다음이 제거합니다. <code>&lt;body&gt;</code> 에 지정한 배경색·여백·기본 글꼴이 통째로 사라집니다.</td></tr>
+    <tr><td><code>&lt;div&gt;</code> 중첩 레이아웃</td><td>네이버·다음에서 배치가 어긋나는 사례가 잦습니다. 같은 구조라도 <code>&lt;table&gt;</code> 로 짠 쪽이 안정적입니다.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>2단 배치를 예로 들면 다음과 같이 바꿔야 합니다.</p>
+
+<pre><code>&lt;!-- 이렇게 하지 마세요 --&gt;
+&lt;div style="display:flex;gap:20px;"&gt;
+  &lt;div style="flex:1;"&gt;왼쪽 내용&lt;/div&gt;
+  &lt;div style="flex:1;"&gt;오른쪽 내용&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- 이렇게 하세요 --&gt;
+&lt;div style="background:#f5f6f8;padding:20px 0;"&gt;
+  &lt;table role="presentation" align="center" width="600"
+         cellpadding="0" cellspacing="0" border="0"&gt;
+    &lt;tr&gt;
+      &lt;td width="290" valign="top"&gt;왼쪽 내용&lt;/td&gt;
+      &lt;td width="20"&gt;&amp;nbsp;&lt;/td&gt;
+      &lt;td width="290" valign="top"&gt;오른쪽 내용&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/table&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="note">
+  <span class="note-title">가장 바깥은 div, 그 안에 table</span>
+  <p>네이버와 다음은 메일 본문을 자기 웹페이지에 끼워 넣으면서 <code>&lt;body&gt;</code> 를 제거합니다. 그래서 <code>&lt;body&gt;</code> 에 배경색이나 여백을 지정해 두면 그대로 사라집니다. 전체 배경처럼 바깥을 감싸는 스타일이 필요하다면 <strong>가장 바깥에 <code>&lt;div&gt;</code> 를 두고 거기에 인라인으로 지정</strong>한 뒤, 그 안에서 <code>&lt;table&gt;</code> 로 내용을 잡으세요.</p>
+</div>
+
+<div class="note">
+  <span class="note-title">role="presentation" 을 빼먹지 마세요</span>
+  <p>레이아웃 목적의 table에는 <code>role="presentation"</code> 을 넣어야 합니다. 이것이 없으면 스크린리더가 데이터 표로 인식해 "3열 1행 표"처럼 읽어버립니다. 시각장애인 수신자에게는 내용을 따라가기 어려운 메일이 됩니다.</p>
+</div>
+
+<h2>CSS는 인라인으로</h2>
+
+<p>이메일에서 가장 안전한 방식은 각 태그의 <code>style</code> 속성에 직접 쓰는 것입니다. <code>&lt;style&gt;</code> 블록은 대부분 제거됩니다. 국내 수신자 비중이 가장 큰 <strong>네이버 메일은 <code>&lt;style&gt;</code> 블록과 <code>&lt;link&gt;</code> 로 불러온 외부 CSS를 삭제</strong>하므로, 거기에 정의한 글꼴·색상·레이아웃 규칙은 아예 적용되지 않습니다. Gmail은 <code>&lt;style&gt;</code> 자체는 받아들이지만 지원하지 않는 속성을 걸러내기 때문에 작성자의 의도와 다르게 보이는 경우가 많고, 본문이 길어 잘릴 때(클리핑)나 메일이 전달될 때는 통째로 떨어뜨립니다. 어느 쪽이든 <code>&lt;style&gt;</code> 이 살아남는다고 가정하고 만들면 안 됩니다.</p>
+
+<h3>피해야 할 CSS 작성 습관</h3>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>피할 것</th><th>이유와 대안</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>rem</code> <code>em</code> <code>vw</code> 단위</td>
+      <td>기준값이 클라이언트마다 달라 크기를 예측할 수 없습니다. <strong><code>px</code></strong>를 쓰세요.</td>
+    </tr>
+    <tr>
+      <td>단축 속성<br><code>margin:0 auto</code></td>
+      <td>Outlook이 단축 표기를 제대로 해석하지 못하는 경우가 있습니다. <code>margin-top</code>처럼 개별 속성으로 쓰거나, 가운데 정렬은 <code>align="center"</code>를 쓰세요.</td>
+    </tr>
+    <tr>
+      <td><code>background-image</code></td>
+      <td>Outlook에서 표시되지 않습니다. 배경 이미지 위에 흰 글자를 얹었다면 배경이 사라지면서 글자도 보이지 않게 됩니다. 반드시 <code>bgcolor</code>로 대체 배경색을 함께 지정하세요.</td>
+    </tr>
+    <tr>
+      <td>웹폰트</td>
+      <td>적용되는 클라이언트가 제한적입니다. 폰트가 없을 때를 가정한 대체 글꼴 목록을 반드시 넣으세요.</td>
+    </tr>
+    <tr>
+      <td><code>:hover</code> <code>@media</code></td>
+      <td>지원이 갈립니다. 있으면 좋지만 <strong>없어도 내용을 읽는 데 지장이 없어야</strong> 합니다. 마우스를 올려야만 보이는 정보를 만들지 마세요.</td>
+    </tr>
+    <tr>
+      <td>이미지를 <code>data:</code>로 본문에 삽입</td>
+      <td>Gmail과 Outlook이 차단합니다. 이미지는 <strong>https 절대 URL</strong>로 불러오세요.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note">
+  <span class="note-title">기본 여백도 믿지 마세요</span>
+  <p><code>&lt;p&gt;</code>와 <code>&lt;h1&gt;</code>~<code>&lt;h6&gt;</code>의 기본 여백은 클라이언트마다 다릅니다. 어떤 곳에서는 문단 간격이 두 배로 벌어집니다. 여백이 중요한 자리라면 <code>margin</code>을 직접 지정하거나, 아예 빈 <code>&lt;td&gt;</code>로 간격을 만드는 편이 예측 가능합니다.</p>
+</div>
+
+<h2>스팸 필터를 자극하는 코드</h2>
+
+<p>렌더링과 별개로, 코드 자체가 위험 신호가 되는 경우도 있습니다.</p>
+
+<ul>
+  <li><strong>숨김 텍스트</strong> — <code>display:none</code>, <code>font-size:0</code>, 배경과 같은 색의 글자. 필터를 속이려는 전형적 수법으로 학습돼 있습니다.</li>
+  <li><strong>표시 문구와 실제 링크가 다른 경우</strong> — 화면에는 <code>example.com</code>이라고 쓰고 <code>href</code>는 다른 도메인으로 보내는 형태. 피싱의 기본 패턴입니다.</li>
+  <li><strong>단축 URL 남발</strong> — 최종 목적지를 감추므로 신뢰도가 떨어집니다.</li>
+  <li><strong>닫히지 않은 태그와 깨진 중첩</strong> — 파싱이 실패하면 필터는 의도적인 난독화로 의심합니다.</li>
+</ul>
+
+<p>본문을 이미지 한 장으로 채우거나 이미지 맵으로 링크를 거는 방식도 강한 감점 요인입니다. 이 주제는 <a href="/posts/image-only-email-spam">이미지 뉴스레터가 스팸함으로 가는 이유와 해결법</a>에서 자세히 다루고 있습니다.</p>
+
+<h2>안심하고 쓸 수 있는 것</h2>
+
+<p>제약이 많아 보이지만, 아래 범위 안에서도 충분히 좋은 메일을 만들 수 있습니다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>요소</th><th>비고</th></tr></thead>
+  <tbody>
+    <tr><td><code>&lt;table&gt;</code> <code>&lt;tr&gt;</code> <code>&lt;td&gt;</code></td><td>레이아웃의 기본 골격</td></tr>
+    <tr><td><code>&lt;p&gt;</code> <code>&lt;br&gt;</code> <code>&lt;strong&gt;</code> <code>&lt;em&gt;</code></td><td>여백은 직접 지정</td></tr>
+    <tr><td><code>&lt;a&gt;</code></td><td>https 절대 URL</td></tr>
+    <tr><td><code>&lt;img&gt;</code></td><td><code>alt</code>과 <code>width</code> 필수. 차단될 것을 전제로 작성</td></tr>
+    <tr><td><code>&lt;ul&gt;</code> <code>&lt;ol&gt;</code></td><td>들여쓰기 폭은 클라이언트마다 다름</td></tr>
+    <tr><td>인라인 <code>color</code> <code>font-size</code> <code>padding</code> <code>text-align</code></td><td>가장 안정적인 스타일 속성</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>발송 전 코드 점검</h2>
+
+<ul>
+  <li><code>&lt;script&gt;</code>, <code>&lt;iframe&gt;</code>, <code>&lt;form&gt;</code>, <code>&lt;video&gt;</code>가 없는가</li>
+  <li>레이아웃을 <code>table</code>로 잡았고 <code>role="presentation"</code>을 넣었는가</li>
+  <li>모든 스타일이 인라인인가, 외부 CSS를 참조하지 않는가</li>
+  <li>모든 링크와 이미지가 https 절대 URL인가</li>
+  <li>배경 이미지에 <code>bgcolor</code> 대체값이 있는가</li>
+  <li>이미지를 모두 차단한 상태로 열어도 내용이 전달되는가</li>
+  <li>크기 단위가 <code>px</code>인가</li>
+  <li>Outlook 데스크톱과 Gmail 웹에서 각각 확인했는가</li>
+</ul>
+
+<div class="note">
+  <span class="note-title">실제로 열어보는 것을 대신할 방법은 없습니다</span>
+  <p>코드를 아무리 규칙에 맞게 써도 클라이언트별 차이는 남습니다. 본 발송 전에 반드시 자신에게 시험 발송해서, 최소한 <strong>Outlook 데스크톱과 Gmail 웹</strong> 두 곳에서 직접 열어 확인하시기 바랍니다. 이 둘에서 문제가 없으면 나머지는 대체로 무난합니다.</p>
+</div>
+
+<div class="cta">
+  <p class="cta-copy">이메일, 문자, FAX, 카카오 비즈메시지를 한 번에</p>
+  <a class="cta-btn" href="https://www.maillink.co.kr?r=tech">
+    메일링크 바로가기
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
+      <path d="M5 12h14M13 6l6 6-6 6"/>
+    </svg>
+  </a>
+</div>

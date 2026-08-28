@@ -30,10 +30,11 @@
 
   // 2) 링크 복사
   var copyBtn = box.querySelector('.share-copy');
+  var toast = box.querySelector('.share-toast');
   if (copyBtn) {
     copyBtn.addEventListener('click', function () {
       copyText(url).then(function (ok) {
-        flash(copyBtn, ok ? '복사됨' : '복사 실패');
+        flash(ok ? '링크를 복사했습니다' : '복사하지 못했습니다');
       });
     });
   }
@@ -59,15 +60,18 @@
     return Promise.resolve(ok);
   }
 
-  function flash(btn, msg) {
-    if (btn.dataset.busy) return;
-    btn.dataset.busy = '1';
-    var original = btn.textContent;
-    btn.textContent = msg;
-    setTimeout(function () {
-      btn.textContent = original;
-      delete btn.dataset.busy;
-    }, 1500);
+  // 버튼이 아이콘 전용이라 글자를 바꿀 수 없다. 별도 알림 영역에 띄운다.
+  // role="status" 라 스크린리더에도 읽힌다.
+  var toastTimer = null;
+  function flash(msg) {
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.classList.add('is-on');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      toast.classList.remove('is-on');
+      toast.textContent = '';
+    }, 2000);
   }
 
   // 3) 카카오톡. sendScrap 은 페이지의 og 태그를 그대로 긁어가므로

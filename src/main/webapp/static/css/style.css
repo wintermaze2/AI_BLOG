@@ -75,40 +75,45 @@ a:hover{text-decoration:underline}
 
 /* 카테고리/태그 아카이브 */
 .archive-meta{margin:-18px 0 26px; color:var(--muted); font-size:.9rem}
-/* 공유 버튼.
-   바로 위 태그 칩(.post-tags a)과 모양이 겹치지 않아야 한다. 둘 다 회색 알약이면
-   공유 버튼이 태그처럼 보인다. 카드로 묶고 플랫폼 브랜드색을 입혀 구분한다. */
+/* 공유 버튼. 아이콘 전용이라 버튼 모양(원형 44px)으로 통일하고,
+   식별은 각 브랜드 로고와 색이 맡는다. 44px 는 터치 목표 최소 권장 크기다.
+   페이스북/쓰레드 로고는 자체 컨테이너가 있어 흰 배경에 브랜드색 아이콘으로,
+   카카오는 '노란 바탕 + 말풍선' 이 로고 구성이라 배경색까지 넣는다. */
 .post-share{margin:40px 0 0; padding:20px 22px; border:1px solid var(--line);
     border-radius:12px; background:var(--soft)}
 .share-label{display:block; margin-bottom:13px; color:var(--muted);
     font-size:.82rem; font-weight:700; letter-spacing:.01em}
-.share-list{display:flex; flex-wrap:wrap; gap:8px}
-.share-btn{display:inline-flex; align-items:center; gap:6px;
-    padding:10px 16px; border:1px solid transparent; border-radius:8px;
-    font-family:inherit; font-size:.86rem; font-weight:600; line-height:1;
-    white-space:nowrap; cursor:pointer;
-    transition:opacity .15s ease, border-color .15s ease, color .15s ease}
-.share-btn:hover{opacity:.85; text-decoration:none}
+.share-list{display:flex; flex-wrap:wrap; gap:10px}
+.share-btn{width:44px; height:44px; padding:0; flex:none;
+    display:inline-flex; align-items:center; justify-content:center;
+    border:1px solid var(--line); border-radius:50%; background:#fff;
+    color:var(--muted); cursor:pointer;
+    transition:border-color .15s ease, background .15s ease, transform .15s ease}
+.share-btn svg{width:22px; height:22px; display:block}
+.share-btn:hover{border-color:var(--accent); background:var(--soft); text-decoration:none}
 .share-btn:active{transform:translateY(1px)}
 .share-btn:focus-visible{outline:3px solid var(--accent); outline-offset:2px}
 .share-btn[hidden]{display:none}
-.share-btn svg{flex:none}
 
-/* a 요소에는 전역 a{color:var(--accent)} 가 걸려 있어 색을 명시적으로 덮는다 */
-a.share-btn.share-fb, a.share-btn.share-fb:hover{background:#1877f2; color:#fff}
-a.share-btn.share-threads, a.share-btn.share-threads:hover{background:#0f0f0f; color:#fff}
-.share-btn.share-kakao{background:#fee500; color:#191600}
-.share-btn.share-native{background:var(--accent); color:#fff}
-.share-btn.share-copy{background:#fff; color:var(--fg); border-color:var(--line)}
-.share-btn.share-copy:hover{opacity:1; border-color:var(--accent); color:var(--accent)}
+/* 전역 a{color:var(--accent)} 가 아이콘 색을 덮으므로 명시적으로 다시 지정한다 */
+a.share-btn.share-fb, a.share-btn.share-fb:hover{color:#1877f2}
+a.share-btn.share-threads, a.share-btn.share-threads:hover{color:#0f0f0f}
+.share-btn.share-native{color:var(--accent)}
+.share-btn.share-kakao{background:#fee500; border-color:#fee500; color:#3c1e1e}
+.share-btn.share-kakao:hover{background:#f5d800; border-color:#f5d800}
+
+/* 링크 복사 결과 알림 */
+.share-toast{display:block; margin-top:10px; min-height:1.2em;
+    color:var(--accent); font-size:.82rem; font-weight:600;
+    opacity:0; transition:opacity .15s ease}
+.share-toast.is-on{opacity:1}
 
 @media (max-width:640px){
     .post-share{padding:18px 16px}
-    .share-list{gap:6px}
-    .share-btn{padding:11px 14px; font-size:.84rem}
+    .share-list{gap:8px}
 }
 @media (prefers-reduced-motion:reduce){
-    .share-btn{transition:none}
+    .share-btn, .share-toast{transition:none}
     .share-btn:active{transform:none}
 }
 

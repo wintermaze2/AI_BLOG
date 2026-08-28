@@ -12,7 +12,7 @@
 
 ### 기능
 
-**글 상세에 SNS 공유 버튼 추가** `pending`
+**글 상세에 SNS 공유 버튼 추가** `applied 2026-08-28`
 - 페이스북·쓰레드는 intent URL 이라 링크만으로 동작한다(JS 불필요)
 - **인스타그램은 웹 공유 URL 이 아예 없다.** 외부 링크를 받는 엔드포인트를
   제공하지 않으므로, 모바일 OS 공유 시트(navigator.share)로만 보낼 수 있다.
@@ -28,12 +28,26 @@
   EL 에 URL 인코딩 함수가 없어 한글 제목이 깨진다
 - static/js 신설(이 프로젝트의 첫 JS 파일). `/static/*` 매핑이 이미 있어
   web.xml 변경은 없다
-- 검증: mvn -o package (JspC 포함) 통과, WAR 에 share.js 포함 확인.
-  **재배포 필요**
+- 배포 후 공유 영역이 "스타일이 안 먹은 것"처럼 보였다. CSS 는 정상 배포되어
+  있었고 원인은 디자인이었다. 바로 위 `.post-tags a` 와 공유 버튼이 둘 다
+  회색 알약(border-radius:999px + var(--line) 테두리)이라 공유 버튼이 태그의
+  두 번째 줄처럼 읽혔다. 카드로 묶고 플랫폼 브랜드색을 입혀 분리했다
+- **카카오 도메인 등록은 두 곳에 각각 해야 한다.** [앱] > 제품 링크 관리 와
+  [앱] > JavaScript SDK 도메인 은 서로 독립이다. 제품 링크 관리에만 등록하고
+  SDK 도메인을 빠뜨려 `Error Code 4019` 가 났다. 오류 안내가 제품 링크 관리만
+  언급해서 원인을 찾기 어려웠다. 자세한 내용은 SEO.md
+- 검증: mvn -o package (JspC 포함) 통과. 배포 후 실제 조회로 확인 —
+  og:image 출력, twitter:card 가 summary_large_image 로 승격, JSON-LD
+  publisher.logo 반영, 카카오 SDK 2.8.2 로드, 선언한 SRI 해시가 CDN 파일과 일치,
+  공유 버튼 5종 출력. 카카오톡 공유 창까지 정상 동작 확인
+- 환경변수 3건(BLOG_KAKAO_JS_KEY / BLOG_DEFAULT_OG_IMAGE / BLOG_LOGO_URL)을
+  넣고 재배포했는데 반영되지 않았다. deployremote.sh 가 stop/start 만 하고
+  `daemon-reload` 를 하지 않아 systemd 가 예전 유닛 파일을 계속 썼기 때문이다.
+  **유닛 파일을 고친 뒤에는 daemon-reload 후 restart 해야 한다**
 
 ### SEO
 
-**기본 og:image 와 publisher 로고 추가** `pending`
+**기본 og:image 와 publisher 로고 추가** `applied 2026-08-28`
 - `static/img/og-default.png` (1200x630) 추가. 설정하면 대표 이미지가 없는
   글도 공유 카드에 이미지가 나가고 twitter:card 가 summary_large_image 로 올라간다
 - `contents/maillink_symbol_512.png` 를 `static/img/logo-512.png` 로 옮김.
@@ -41,7 +55,7 @@
 - SEO.md 갱신: §0(1) 슬러그 오타는 해결됐으므로 표시 변경, §0(2) 카테고리
   표에 문자보안 추가, §1 환경변수 표에 BLOG_KAKAO_JS_KEY 추가,
   §4 공유 미리보기에 페이스북·카카오 디버거와 캐시 갱신 안내 추가
-- 설정할 환경변수 두 건은 **아직 서버에 넣지 않았다**
+- 환경변수 두 건 설정 완료. 배포 후 실제 조회로 확인했다
 
 ### 콘텐츠
 
@@ -60,7 +74,7 @@
 
 ### SEO
 
-**검색결과 파비콘 수정** `pending`
+**검색결과 파비콘 수정** `applied 2026-08-21`
 - 증상: 구글 검색결과에 메일링크 아이콘 대신 브라우저 기본 아이콘이 나왔다
 - 원인: 파비콘으로 헤더 로고 `logo-bg-trans.png` 를 그대로 선언하고 있었는데
   이 이미지가 **50x37 로 정사각형이 아니다**. 구글은 정사각형 아이콘만 받고
@@ -83,7 +97,7 @@
 
 ### 스타일
 
-**본문 h4 스타일 추가** `pending`
+**본문 h4 스타일 추가** `applied 2026-08-21`
 - `.post-body` 헤딩 규칙이 h1~h3 만 잡고 있어 h4 가 브라우저 기본값으로 렌더링됐다.
   기본 h4 는 본문(1rem)보다 작아져 h3 와 본문 사이 단계가 성립하지 않는다
 - h4 를 규칙에 넣고 `font-size:1.02rem` 로 올림.
@@ -216,7 +230,7 @@
 
 ### 콘텐츠 · 문서
 
-**맺음 CTA 공통화 + 문구 변경** `pending`
+**맺음 CTA 공통화 + 문구 변경** `applied 2026-08-21`
 - 모든 글 끝에 '메일링크 바로가기' CTA를 넣도록 지침에 규칙 추가(18·19번).
   필수가 된 이상 글마다 CSS를 복사하면 안 되므로 `.cta`/`.cta-copy`/`.cta-btn` 을
   style.css 로 이동(표 때와 같은 판단)

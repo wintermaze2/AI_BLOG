@@ -106,8 +106,13 @@ DEALLOCATE PREPARE stmt;
 --   category_id = 1 을 하드코딩하고 있어 이 파일을 재실행하면 FK 위반이 났다.
 --   AUTO_INCREMENT 로 재생성되는 id 는 1 이 아니기 때문이다.
 -- =====================================================================
+--
+-- 2026-08-28: '문자보안' 추가. 문자(SMS) 발송 비중이 이메일과 비슷해져
+--   문자 관련 주제를 별도 축으로 분리한다.
+-- =====================================================================
 INSERT INTO category (name, slug) VALUES
     ('이메일 인증',   'email-auth'),
     ('이메일 작성팁', 'sending-tips'),
-    ('이메일 보안',   'email-security')
+    ('이메일 보안',   'email-security'),
+    ('문자보안',      'sms-security')
 ON DUPLICATE KEY UPDATE name = VALUES(name);

@@ -117,11 +117,24 @@ Environment="BLOG_DEFAULT_OG_IMAGE=https://tech.maillink.co.kr/static/img/og-def
 불러오지 않고 버튼도 출력하지 않으므로, 설정 전에는 제3자 스크립트가
 페이지에 실리지 않습니다.
 
-설정하려면 카카오 디벨로퍼스에서 앱을 만들고 **플랫폼 > Web 에 사이트
-도메인을 등록**한 뒤(등록하지 않으면 공유가 실패합니다) JavaScript 키를 넣습니다.
+키는 카카오 디벨로퍼스의 앱 > **플랫폼키 > JavaScript 키** 에서 확인합니다.
+클라이언트에 그대로 노출되는 값이라 비밀키가 아니지만, 환경으로 분리해 둡니다.
 
 ```ini
 Environment="BLOG_KAKAO_JS_KEY=여기에_JavaScript_키"
+```
+
+**도메인 등록이 반드시 함께 필요합니다.** 앱 설정의 플랫폼(Web) 항목에
+`https://tech.maillink.co.kr` 을 사이트 도메인으로 등록하지 않으면, 키가
+맞아도 SDK 가 도메인 검사에서 막혀 공유가 실패합니다.
+
+SDK 는 버전을 고정하고 `integrity` 로 무결성을 검사합니다
+([detail.jsp](src/main/webapp/WEB-INF/views/post/detail.jsp)).
+버전을 올릴 때는 해시도 반드시 다시 계산하세요. 값이 어긋나면 브라우저가
+스크립트 로드를 아예 차단합니다.
+
+```bash
+curl -s https://t1.kakaocdn.net/kakao_js_sdk/2.8.2/kakao.min.js   | openssl dgst -sha384 -binary | openssl base64 -A
 ```
 
 ---

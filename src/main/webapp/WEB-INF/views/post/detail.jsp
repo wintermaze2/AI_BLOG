@@ -72,8 +72,12 @@
 </div>
 
 <c:if test="${not empty kakaoJsKey}">
-<%-- SDK 버전은 카카오 디벨로퍼스 문서에서 최신값을 확인한 뒤 올릴 것 --%>
-<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"></script>
+<%-- integrity 는 이 버전 파일에서 직접 계산한 값이다.
+     버전을 올리면 해시도 반드시 다시 계산해야 한다(안 하면 로드가 차단된다).
+       curl -s <url> | openssl dgst -sha384 -binary | openssl base64 -A --%>
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.8.2/kakao.min.js"
+        integrity="sha384-zt/G7/KfaRQ9dT/QIkS0ujMtzouJqzuSJcXVQu50x0rl/+mD1dc70AeOejVbMD9E"
+        crossorigin="anonymous"></script>
 </c:if>
 <script src="${pageContext.request.contextPath}/static/js/share.js" defer></script>
 

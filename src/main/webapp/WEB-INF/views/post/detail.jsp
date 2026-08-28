@@ -48,6 +48,35 @@
     </c:if>
 </article>
 
+<%-- 공유 버튼.
+     페이스북/쓰레드는 링크만으로 공유되므로 JS 없이도 동작한다.
+     인스타그램은 웹 공유 URL 자체가 없어 모바일 네이티브 공유로만 가능하고,
+     카카오톡은 SDK 가 필요해 BLOG_KAKAO_JS_KEY 가 설정된 경우에만 노출된다. --%>
+<div class="post-share" data-share
+     data-url="${fn:escapeXml(canonical)}"
+     data-title="${fn:escapeXml(post.title)}">
+    <span class="share-label">이 글 공유하기</span>
+    <div class="share-list">
+        <%-- navigator.share 를 지원할 때만 share.js 가 드러낸다 --%>
+        <button type="button" class="share-btn share-native" hidden>공유하기</button>
+        <a class="share-btn share-fb" target="_blank" rel="noopener noreferrer"
+           href="https://www.facebook.com/sharer/sharer.php?u=${shareUrlEnc}">페이스북</a>
+        <a class="share-btn share-threads" target="_blank" rel="noopener noreferrer"
+           href="https://www.threads.net/intent/post?text=${shareTitleEnc}%20${shareUrlEnc}">쓰레드</a>
+        <c:if test="${not empty kakaoJsKey}">
+        <button type="button" class="share-btn share-kakao"
+                data-key="${fn:escapeXml(kakaoJsKey)}">카카오톡</button>
+        </c:if>
+        <button type="button" class="share-btn share-copy">링크 복사</button>
+    </div>
+</div>
+
+<c:if test="${not empty kakaoJsKey}">
+<%-- SDK 버전은 카카오 디벨로퍼스 문서에서 최신값을 확인한 뒤 올릴 것 --%>
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"></script>
+</c:if>
+<script src="${pageContext.request.contextPath}/static/js/share.js" defer></script>
+
 <p class="back-link">
     <a href="${pageContext.request.contextPath}/">← 목록으로</a>
 </p>

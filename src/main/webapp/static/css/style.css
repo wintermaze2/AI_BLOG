@@ -75,6 +75,27 @@ a:hover{text-decoration:underline}
 
 /* 카테고리/태그 아카이브 */
 .archive-meta{margin:-18px 0 26px; color:var(--muted); font-size:.9rem}
+/* 공유 버튼 */
+.post-share{margin:34px 0 0; padding-top:22px; border-top:1px solid var(--line)}
+.share-label{display:block; margin-bottom:10px; color:var(--muted); font-size:.85rem}
+.share-list{display:flex; flex-wrap:wrap; gap:8px}
+.share-btn{display:inline-flex; align-items:center; padding:7px 14px;
+    border:1px solid var(--line); border-radius:999px; background:#fff;
+    color:var(--fg); font-family:inherit; font-size:.85rem; line-height:1.2;
+    cursor:pointer; transition:border-color .15s ease, background .15s ease}
+.share-btn:hover{border-color:var(--accent); background:var(--soft); text-decoration:none}
+.share-btn:focus-visible{outline:3px solid var(--accent); outline-offset:2px}
+a.share-btn{color:var(--fg)}
+.share-native{border-color:var(--accent); color:var(--accent); font-weight:600}
+.share-btn[hidden]{display:none}
+@media (max-width:640px){
+    .share-list{gap:6px}
+    .share-btn{padding:8px 13px}
+}
+@media (prefers-reduced-motion:reduce){
+    .share-btn{transition:none}
+}
+
 .post-tags{list-style:none; display:flex; flex-wrap:wrap; gap:8px; margin:34px 0 0; padding:0}
 .post-tags a{display:inline-block; padding:4px 12px; border-radius:999px; background:var(--soft);
     border:1px solid var(--line); color:var(--muted); font-size:.82rem}

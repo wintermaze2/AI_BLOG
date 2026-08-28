@@ -60,6 +60,19 @@ public final class SiteConfig {
         return env("BLOG_LOGO_URL", "");
     }
 
+    // =================================================================
+    // 공유
+    // =================================================================
+
+    /**
+     * 카카오 JavaScript 앱 키. 카카오톡 공유는 링크만으로는 불가능하고
+     * Kakao SDK 가 필요하다. 비어 있으면 SDK 를 불러오지 않고 버튼도 내보내지 않는다.
+     * 설정하기 전에 카카오 디벨로퍼스에서 사이트 도메인을 등록해야 한다.
+     */
+    public static String kakaoJsKey() {
+        return env("BLOG_KAKAO_JS_KEY", "");
+    }
+
     private static String env(String key, String def) {
         String v = System.getenv(key);
         return (v == null || v.isBlank()) ? def : v;

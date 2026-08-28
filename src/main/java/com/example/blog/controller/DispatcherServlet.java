@@ -18,6 +18,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,6 +58,7 @@ public class DispatcherServlet extends HttpServlet {
         // 소유확인 토큰은 모든 공개 페이지에 실어 둔다(검색엔진은 보통 홈만 확인하지만
         // 어느 URL로 확인하든 통과하도록).
         req.setAttribute("googleSiteVerification", SiteConfig.googleSiteVerification());
+        req.setAttribute("kakaoJsKey", SiteConfig.kakaoJsKey());
         req.setAttribute("naverSiteVerification", SiteConfig.naverSiteVerification());
         // 글 상세에서는 대표 이미지로 덮어쓴다.
         req.setAttribute("ogImage", SiteConfig.defaultOgImage());
@@ -230,6 +232,10 @@ public class DispatcherServlet extends HttpServlet {
                 post.getMetaDescription() != null ? post.getMetaDescription() : post.getSummary());
         String url = SiteConfig.baseUrl() + UrlUtil.encodePath("/posts/" + post.getSlug());
         req.setAttribute("canonical", url);
+        // 공유 링크의 쿼리 파라미터로 들어가므로 미리 인코딩해 둔다(EL 에는 인코딩 함수가 없다).
+        req.setAttribute("shareUrlEnc", URLEncoder.encode(url, StandardCharsets.UTF_8));
+        req.setAttribute("shareTitleEnc",
+                URLEncoder.encode(post.getTitle(), StandardCharsets.UTF_8));
         req.setAttribute("jsonLd", JsonLd.blogPosting(post, url));
 
         // 이동 경로: 홈 > (카테고리) > 글

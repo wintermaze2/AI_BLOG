@@ -10,21 +10,17 @@
 색인이 시작된 뒤에 URL을 바꾸면 쌓인 신호를 잃고 404가 남습니다.
 이 블로그에는 301 리다이렉트 기능이 없으므로 **등록 전에** 정리하세요.
 
-### (1) 슬러그 오타 — `hot-to-set-dns`
+### (1) 슬러그 오타 — 해결됨
 
-DNS 설정 글의 슬러그가 `hot-to-set-dns` 로 등록되어 있습니다. `how` 의 오타입니다.
+DNS 설정 글의 슬러그가 `hot-to-set-dns` 오타로 등록되어 있었습니다.
+`how-to-set-dns` 로 수정 완료했고, sitemap 에서도 확인했습니다.
 
-```
-현재 : https://tech.maillink.co.kr/posts/hot-to-set-dns   (200)
-정상 : https://tech.maillink.co.kr/posts/how-to-set-dns   (현재 404)
-```
-
-관리자 > 해당 글 수정 > Slug 를 `how-to-set-dns` 로 바꾸고 저장하세요.
-아직 이 URL을 링크하는 글이 없어 지금 고치면 부작용이 없습니다.
+교훈은 남겨 둡니다. **슬러그는 색인 전에 확정하세요.** 색인이 시작된 뒤
+바꾸면 쌓인 신호를 잃고 옛 URL 이 404 로 남습니다.
 
 ### (2) 카테고리
 
-`2026-08-21` 기준으로 아래 세 개를 씁니다. 관리자 화면에 카테고리를 만드는
+`2026-08-28` 기준으로 아래 네 개를 씁니다. 관리자 화면에 카테고리를 만드는
 기능이 없으므로, 추가·변경은 [sql/schema.sql](sql/schema.sql) 의
 "카테고리 초기 데이터" 블록을 고치고 DB에 직접 반영합니다.
 
@@ -33,6 +29,7 @@ DNS 설정 글의 슬러그가 `hot-to-set-dns` 로 등록되어 있습니다. `
 | 이메일 인증 | `email-auth` | `/category/email-auth` |
 | 이메일 작성팁 | `sending-tips` | `/category/sending-tips` |
 | 이메일 보안 | `email-security` | `/category/email-security` |
+| 문자보안 | `sms-security` | `/category/sms-security` |
 
 기본 카테고리 `개발`(dev) / `일상`(life) 은 이 블로그 주제와 맞지 않아 삭제했습니다.
 
@@ -76,6 +73,7 @@ sudo systemctl show tomcat -p Environment | tr ' ' '\n' | grep BLOG_
 | `BLOG_NAVER_SITE_VERIFICATION` | 네이버 소유확인 토큰 | 등록 시 |
 | `BLOG_DEFAULT_OG_IMAGE` | 대표 이미지 없는 글의 og:image (1200x630 권장) | 선택 |
 | `BLOG_LOGO_URL` | JSON-LD publisher 로고 (최소 112px) | 선택 |
+| `BLOG_KAKAO_JS_KEY` | 카카오톡 공유 버튼용 JavaScript 앱 키 | 선택 |
 
 예시:
 
@@ -95,15 +93,36 @@ sudo systemctl daemon-reload && sudo systemctl restart tomcat
 헤더 로고(50x37)는 두 용도 모두에 너무 작아, 잘못 넣으면
 구글이 "로고가 작다" 경고를 냅니다.
 
-`BLOG_LOGO_URL` 은 이제 설정할 수 있습니다. 2026-08-21 에 추가한 파비콘
-192x192 가 구글의 publisher 로고 최소 크기(112px)를 넘습니다.
+`BLOG_LOGO_URL` 은 이제 설정할 수 있습니다. 512x512 심볼 로고를 두었고,
+구글의 publisher 로고 최소 크기(112px)를 넉넉히 넘습니다.
 
 ```ini
-Environment="BLOG_LOGO_URL=https://tech.maillink.co.kr/favicon-192.png"
+Environment="BLOG_LOGO_URL=https://tech.maillink.co.kr/static/img/logo-512.png"
 ```
 
-`BLOG_DEFAULT_OG_IMAGE` 는 여전히 보류입니다. 공유 미리보기용 1200x630
-가로 이미지가 필요한데, 정사각형 파비콘을 넣으면 잘려서 나옵니다.
+파비콘(`/favicon-192.png`)을 써도 크기 조건은 충족하지만, 파비콘은 작은
+화면에 맞춰 단순화한 이미지라 로고 용도로는 512 쪽이 낫습니다.
+
+`BLOG_DEFAULT_OG_IMAGE` 도 설정할 수 있습니다. 2026-08-28 에 1200x630
+기본 공유 이미지를 추가했습니다.
+
+```ini
+Environment="BLOG_DEFAULT_OG_IMAGE=https://tech.maillink.co.kr/static/img/og-default.png"
+```
+
+대표 이미지가 지정된 글은 그 이미지를, 없는 글과 목록·홈은 이 기본값을 씁니다.
+
+`BLOG_KAKAO_JS_KEY` 는 글 상세의 **카카오톡 공유 버튼**용입니다. 카카오톡은
+링크만으로는 공유할 수 없고 Kakao SDK 가 필요합니다. 비어 있으면 SDK 를
+불러오지 않고 버튼도 출력하지 않으므로, 설정 전에는 제3자 스크립트가
+페이지에 실리지 않습니다.
+
+설정하려면 카카오 디벨로퍼스에서 앱을 만들고 **플랫폼 > Web 에 사이트
+도메인을 등록**한 뒤(등록하지 않으면 공유가 실패합니다) JavaScript 키를 넣습니다.
+
+```ini
+Environment="BLOG_KAKAO_JS_KEY=여기에_JavaScript_키"
+```
 
 ---
 
@@ -193,9 +212,27 @@ curl -s https://tech.maillink.co.kr/ | grep -i 'rel="icon"\|apple-touch'
 
 ### 공유 미리보기
 
-`BLOG_DEFAULT_OG_IMAGE` 를 설정하기 전까지는 og:image 가 없어
-카카오톡·슬랙 공유 시 이미지 없이 제목과 설명만 보입니다.
-이미지가 없을 때는 `twitter:card` 도 `summary` 로 낮추므로 빈 영역은 생기지 않습니다.
+`BLOG_DEFAULT_OG_IMAGE` 를 설정하면 대표 이미지가 없는 글도 공유 시
+1200x630 기본 이미지가 함께 나가고, `twitter:card` 도 `summary_large_image`
+로 올라갑니다. 미설정이면 og:image 를 아예 넣지 않고 `twitter:card` 를
+`summary` 로 낮추므로, 이미지 없이 제목과 설명만 보이되 빈 영역은 생기지 않습니다.
+
+글 상세에 공유 버튼(페이스북·쓰레드·카카오톡·링크 복사·네이티브 공유)이
+있으므로, 이 값을 설정해야 공유 카드가 제대로 보입니다.
+
+배포 후 확인:
+
+```bash
+curl -s https://tech.maillink.co.kr/posts/about-spf | grep -i 'og:image'
+```
+
+미리보기 점검 도구:
+
+- 페이스북: https://developers.facebook.com/tools/debug/
+- 카카오톡: 카카오 디벨로퍼스 > 도구 > 공유 디버거
+
+두 곳 모두 캐시를 갖고 있어, 이미지를 바꾼 뒤에는 디버거에서 한 번
+갱신해 주어야 예전 카드가 사라집니다.
 
 ### 무엇을 보게 되는가
 

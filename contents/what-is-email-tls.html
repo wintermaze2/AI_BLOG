@@ -1,0 +1,175 @@
+<p>이메일은 기본적으로 <strong>엽서에 가깝습니다.</strong> 봉투 없이 적어 보내면 중간을 거치는 누구나 읽을 수 있습니다. TLS는 그 엽서를 봉투에 넣는 일에 해당합니다. 이 글에서는 TLS가 무엇이고 이메일에서 어떻게 동작하는지, 왜 지금 선택이 아니라 필수 조건이 되었는지, 그리고 메일링크가 이를 어떻게 처리하는지 정리합니다.</p>
+
+<h2>TLS란 무엇인가</h2>
+
+<p><strong>TLS</strong>(Transport Layer Security)는 네트워크로 오가는 데이터를 암호화하는 표준 규약입니다. 웹 주소가 <code>http</code>가 아니라 <code>https</code>로 시작하고 주소창에 자물쇠가 뜨는 것, 그것이 TLS입니다. 예전에 쓰이던 <strong>SSL</strong>의 후속 규격이라 지금도 "SSL"이라는 이름으로 부르는 경우가 많지만, 실제로 동작하는 것은 TLS입니다.</p>
+
+<p>이메일에서 TLS는 <strong>메일 서버와 서버 사이의 연결</strong>을 암호화합니다. 암호화가 없으면 메일 본문과 제목, 받는 사람 주소가 <strong>평문 그대로</strong> 네트워크를 지나갑니다. 중간 경로의 통신 장비나 같은 네트워크에 있는 누군가가 내용을 그대로 읽을 수 있다는 뜻입니다.</p>
+
+<h3>적용 방식 두 가지</h3>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>방식</th><th>포트</th><th>동작</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>STARTTLS</strong></td><td>587, 25</td><td>평문으로 연결을 시작한 뒤 "암호화로 전환하자"고 요청합니다. 상대가 지원하면 그때부터 암호화됩니다.</td></tr>
+      <tr><td><strong>암시적 TLS</strong><br>(SMTPS)</td><td>465</td><td>연결하는 순간부터 암호화합니다. 평문 구간이 아예 없습니다.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>서버 간 전달(MTA 사이)에서는 대부분 <code>STARTTLS</code>가 쓰입니다. 실제 대화는 이렇게 진행됩니다.</p>
+
+<pre><code>S: 220 mx.example.com ESMTP
+C: EHLO mail.sender.com
+S: 250-mx.example.com
+S: 250-STARTTLS              ← 암호화를 지원한다는 신호
+S: 250 OK
+C: STARTTLS                  ← 전환 요청
+S: 220 Ready to start TLS
+   ... 이후 구간은 모두 암호화 ...</code></pre>
+
+<h3>TLS는 발신자 인증이 아닙니다</h3>
+
+<p>여기서 자주 혼동이 생깁니다. TLS는 <a href="/posts/about-spf">SPF</a>·<a href="/posts/about-dkim">DKIM</a>·<a href="/posts/about-dmarc">DMARC</a>와 <strong>목적이 다른 기술</strong>입니다.</p>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>기술</th><th>답하는 질문</th><th>보호하는 것</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>TLS</td><td>전달되는 동안 누가 엿볼 수 있는가?</td><td>내용의 기밀성</td></tr>
+      <tr><td>SPF / DKIM / DMARC</td><td>이 메일을 정말 그 도메인이 보냈는가?</td><td>발신자의 신원</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>그래서 둘은 서로를 대신하지 못합니다. TLS로 암호화해도 발신자를 위조한 <a href="/posts/phishing-sender-spoofing">피싱 메일</a>은 그대로 도착하고, DMARC를 걸어도 TLS가 없으면 내용이 평문으로 지나갑니다.</p>
+
+<h3>구간 암호화이지 종단 간 암호화가 아닙니다</h3>
+
+<p>이 점은 반드시 짚고 넘어가야 합니다. TLS는 <strong>서버와 서버 사이의 한 구간</strong>만 보호합니다.</p>
+
+<pre><code>발신 서버 --[TLS]-- 중계 서버 --[TLS]-- 수신 서버
+             ↑                    ↑
+        여기서는 복호화된 상태로 서버에 남습니다</code></pre>
+
+<p>각 서버는 메일을 받아 복호화하고, 다음 서버로 넘길 때 다시 암호화합니다. 즉 <strong>경유하는 서버는 내용을 읽을 수 있습니다.</strong> 메일 사업자가 스팸 검사를 할 수 있는 것도 이 때문입니다.</p>
+
+<p>진짜로 아무도 못 읽게 하려면 본문 자체를 암호화하는 <strong>종단 간 암호화</strong>(S/MIME, PGP)가 필요합니다. TLS는 "배송 중 도청"을 막는 기술이지 "내용을 아무도 못 보게" 하는 기술이 아닙니다.</p>
+
+<h2>왜 지금 더 중요해졌는가</h2>
+
+<p>TLS는 오래된 기술입니다. 달라진 것은 기술이 아니라 <strong>메일 사업자의 태도</strong>입니다. 예전에는 "있으면 좋은 것"이었지만 지금은 <strong>없으면 감점되는 항목</strong>입니다.</p>
+
+<h3>주요 메일 사업자의 발신자 요구사항</h3>
+
+<p>구글은 2024년 2월부터 발신자 가이드라인을 대폭 강화했습니다. 자주 이야기되는 것은 SPF·DKIM·DMARC와 원클릭 수신거부지만, <strong>모든 발신자에게 적용되는 항목에 TLS가 들어 있습니다.</strong> 문서의 표현은 이렇습니다.</p>
+
+<blockquote>
+<p><strong>이메일 전송에 TLS 연결을 사용하세요.</strong></p>
+</blockquote>
+
+<p>야후도 같은 시기에 사실상 동일한 기준을 적용했습니다. 마이크로소프트는 2025년 5월부터 아웃룩 계열에 요구사항을 도입했는데, 여기서는 강조점이 조금 다릅니다.</p>
+
+<div class="table-wrap">
+  <table class="table-wide">
+    <thead>
+      <tr><th>사업자</th><th>시행</th><th>TLS</th><th>인증</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>구글(지메일)</td><td>2024년 2월</td><td><strong>모든 발신자 필수</strong></td><td>SPF 또는 DKIM. 하루 5,000통 이상이면 SPF·DKIM·DMARC 전부</td></tr>
+      <tr><td>야후</td><td>2024년 2월</td><td><strong>모든 발신자 필수</strong></td><td>구글과 동일</td></tr>
+      <tr><td>마이크로소프트(아웃룩)</td><td>2025년 5월</td><td>명시적 요건 아님 · 권장</td><td>하루 5,000통 이상이면 SPF·DKIM·DMARC 필수. 미충족 시 <code>550 5.7.15</code>로 거부</td></tr>
+    </tbody>
+  </table>
+</div>
+<p class="scroll-hint">← 표를 좌우로 밀어서 보실 수 있습니다.</p>
+
+<p>정확히 하면 <strong>TLS를 명시적 요건으로 못 박은 것은 구글과 야후</strong>이고, 마이크로소프트는 인증 3종에 집중하면서 TLS는 권장 사항으로 둡니다. 다만 세 곳이 향하는 방향은 같습니다. 예전에는 "지키면 좋은 것"이던 항목들이 <strong>지키지 않으면 거부당하는 조건</strong>으로 바뀌고 있고, 마이크로소프트가 미충족 메일을 스팸함이 아니라 아예 거부한다는 점이 그 변화를 잘 보여줍니다.</p>
+
+<p>이 조건들은 <a href="/posts/how-to-set-dns">DNS 설정</a>과 함께 지금은 기본 요건으로 봐야 합니다.</p>
+
+<h3>수신자 화면에 표시됩니다</h3>
+
+<p>지메일은 암호화되지 않은 채 도착한 메일에 <strong>빨간 열린 자물쇠 아이콘</strong>을 붙입니다. 받는 사람이 기술을 몰라도 "이 메일은 안전하지 않다"는 신호를 보게 되는 것입니다. 기업이 보내는 안내 메일에 이 표시가 붙으면 신뢰에 직접적인 영향을 줍니다.</p>
+
+<h3>도달률과 연결됩니다</h3>
+
+<p>TLS 미사용은 그 자체로 스팸 판정 사유는 아니지만, 발신자 평판을 구성하는 신호 중 하나입니다. <a href="/posts/spf-dkim-dmarc-spam">인증을 모두 통과해도 스팸으로 분류되는 것</a>과 같은 맥락입니다. 수신 서버는 여러 신호를 종합해 판단하고, TLS는 그중 <strong>가장 적은 비용으로 채울 수 있는 항목</strong>입니다.</p>
+
+<h3>다운그레이드 공격</h3>
+
+<p>STARTTLS에는 구조적인 약점이 하나 있습니다. 암호화 여부를 <strong>평문 구간에서 협상</strong>한다는 점입니다.</p>
+
+<pre><code>정상 :  S: 250-STARTTLS   →  C: STARTTLS  →  암호화
+공격 :  S: 250-XXXXXXXX   →  (지원 안 하는 것으로 보임)  →  평문 전송</code></pre>
+
+<p>중간에서 통신을 가로챌 수 있는 공격자가 <code>STARTTLS</code> 신호를 지워버리면, 발신 서버는 상대가 암호화를 지원하지 않는다고 판단해 평문으로 보냅니다. 이를 <strong>다운그레이드 공격</strong>이라고 합니다.</p>
+
+<p>이를 막기 위한 것이 <strong>MTA-STS</strong>입니다. 도메인 소유자가 "우리에게 보낼 때는 반드시 유효한 인증서로 TLS를 쓰라"는 정책을 공개해 두면, 발신 서버는 협상 결과와 무관하게 그 정책을 따릅니다. 암호화가 안 되면 평문으로 보내는 대신 <strong>발송을 포기</strong>합니다. 결과를 리포트로 받아보는 <strong>TLS-RPT</strong>도 함께 씁니다.</p>
+
+<h2>메일링크는 어떻게 처리하나요</h2>
+
+<p>메일링크는 <strong>TLS를 우선 적용</strong>합니다. 메일을 보낼 때 먼저 수신 서버에 암호화 연결을 시도하고, 상대가 지원하면 전 구간을 암호화해 전송합니다. 별도로 켜야 하는 옵션이 아니라 기본 동작입니다.</p>
+
+<p>문제는 <strong>상대 서버가 TLS를 지원하지 않는 경우</strong>입니다. 오래된 사내 메일 서버나 오래된 장비를 쓰는 곳이 아직 남아 있습니다. 이때 선택지는 둘뿐입니다.</p>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>선택</th><th>결과</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>발송 포기</td><td>기밀성은 지키지만 <strong>메일이 도착하지 않습니다.</strong> 주문 확인서도 인증번호도 전달되지 않습니다.</td></tr>
+      <tr><td>평문으로 전송<br>(폴백)</td><td>메일은 도착하지만 그 구간은 암호화되지 않습니다.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>메일링크는 <strong>폴백을 택합니다.</strong> TLS로 보낼 수 없는 상대에게는 일반 통신으로 발송해 전달 자체는 보장합니다. 업무 메일과 거래 알림이 "상대 서버가 구형이라"는 이유로 사라지면 안 되기 때문입니다.</p>
+
+<p>이 방식을 <strong>기회적 TLS</strong>(opportunistic TLS)라고 부르며, 인터넷 메일의 사실상 표준 동작입니다. 지메일을 포함한 대부분의 메일 사업자가 같은 방식으로 처리합니다.</p>
+
+<h3>이 선택이 의미하는 것</h3>
+
+<p>정리하면 이렇습니다.</p>
+
+<ul>
+  <li><strong>상대가 TLS를 지원하면</strong> — 대형 메일 사업자와 정상적으로 운영되는 메일 서버는 거의 전부 해당합니다. 암호화되어 전송되고, 지메일에서 자물쇠 경고도 뜨지 않습니다.</li>
+  <li><strong>지원하지 않으면</strong> — 평문으로 전송됩니다. 전달은 되지만 그 구간은 보호되지 않습니다.</li>
+</ul>
+
+<p>실무적으로는 대부분의 메일이 첫 번째 경우에 해당합니다. 다만 <strong>모든 메일이 반드시 암호화된다고 가정해서는 안 됩니다.</strong> 계좌번호나 주민등록번호, 비밀번호처럼 유출되면 곤란한 정보는 애초에 메일 본문에 담지 않는 것이 원칙입니다. 꼭 필요하다면 파일을 암호화하거나, 메일에는 안내만 보내고 실제 내용은 로그인이 필요한 화면에서 확인하게 하는 방식이 안전합니다.</p>
+
+<h2>정리</h2>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>질문</th><th>답</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>TLS는 무엇을 보호하나요?</td><td>서버 간 전달 구간의 내용. 발신자 신원은 SPF·DKIM·DMARC의 몫입니다.</td></tr>
+      <tr><td>종단 간 암호화인가요?</td><td>아닙니다. 경유하는 서버는 내용을 읽을 수 있습니다.</td></tr>
+      <tr><td>꼭 필요한가요?</td><td>네. 구글과 야후가 모든 발신자에게 요구하는 항목입니다.</td></tr>
+      <tr><td>메일링크는 어떻게 하나요?</td><td>TLS 우선 적용, 상대가 지원하지 않으면 일반 통신으로 폴백합니다.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>TLS는 이메일 보안에서 가장 적은 노력으로 가장 확실한 효과를 얻는 항목입니다. 인증 설정처럼 DNS를 만질 필요도 없고, 대부분 발송 시스템이 이미 지원합니다. 그럼에도 아직 평문으로 메일을 보내는 곳이 남아 있고, 그 차이는 이제 수신자 화면의 자물쇠 아이콘으로 드러납니다.</p>
+
+<div class="cta">
+  <p class="cta-copy">이메일, 문자, FAX, 카카오 비즈메시지를 한 번에</p>
+  <a class="cta-btn" href="https://www.maillink.co.kr?r=tech">
+    메일링크 바로가기
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="square" aria-hidden="true">
+      <path d="M5 12h14M13 6l6 6-6 6"/>
+    </svg>
+  </a>
+</div>

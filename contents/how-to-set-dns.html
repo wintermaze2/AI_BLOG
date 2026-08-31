@@ -93,9 +93,11 @@
 </div>
 
 <div class="note">
-  <span class="note-title">p=none으로 시작하되 거기서 멈추지 마세요</span>
-  <p><code>p=none</code>은 처음 도입할 때 안전한 선택입니다. 설정이 미흡해도 정상 메일이 차단되지 않기 때문입니다. 다만 <code>p=none</code> 상태에서는 <strong>스푸핑을 실제로 막아 주지 못한다</strong>는 점을 알고 계셔야 합니다.</p>
-  <p><code>rua</code>로 보고서를 받으며 몇 주간 모니터링한 뒤, 누락된 발송 경로가 없다는 것이 확인되면 <code>quarantine</code>, <code>reject</code> 순으로 단계적으로 강화하시는 것을 권장합니다.</p>
+  <span class="note-title">처음에는 p=none 으로 시작하세요</span>
+  <p><code>p=none</code>은 "인증에 실패해도 아무 조치 없이 통과시키고 보고서만 보내라"는 뜻입니다. 메일링크를 이용하신다면 <strong>이 값으로 시작하시는 것을 권장합니다.</strong></p>
+  <p>이유가 있습니다. 위의 SPF·DKIM 설정을 아직 마치지 않은 상태에서는 메일이 <strong>메일링크의 도메인 기준으로 인증</strong>됩니다. 이때 인증에 성공한 도메인과 받는 사람 화면에 보이는 보내는이 도메인이 서로 달라 <strong>DMARC 판정은 실패</strong>합니다. 여기에 <code>quarantine</code>이나 <code>reject</code>를 걸어 두면 <strong>고객에게 보내는 정상 메일이 스팸함으로 가거나 아예 거부됩니다.</strong></p>
+  <p>정책을 올리는 것은 <strong>SPF·DKIM·리턴패스를 모두 등록하고, 실제로 보낸 메일이 DMARC를 통과하는 것을 확인한 뒤</strong>입니다. <code>rua</code>로 받은 보고서에서 정상 발송 경로가 모두 통과하는지 몇 주간 살펴보거나, 받은 메일의 원본 헤더에서 <code>dmarc=pass</code>를 직접 확인하시면 됩니다. 헤더 읽는 방법은 <a href="/posts/email-header-analysis">이메일 헤더 분석</a>에 정리해 두었습니다.</p>
+  <p>확인이 끝나면 <code>quarantine</code>, <code>reject</code> 순으로 단계적으로 올리시면 됩니다. <code>p=none</code> 상태에서는 사칭 메일을 실제로 <strong>차단하지는 못하지만</strong>, 보고서를 통해 누가 내 도메인을 사칭하고 있는지 파악할 수 있습니다.</p>
 </div>
 
 <p>보다 자세한 내용은 <a href="/posts/about-dmarc">DMARC에 대하여 알아보기</a>를 참조하시기 바랍니다.</p>

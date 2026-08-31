@@ -212,7 +212,11 @@ body.admin{background:#eef1f6}
 .admin-table th,.admin-table td{padding:12px 14px; border-bottom:1px solid var(--line); text-align:left; font-size:.92rem}
 .admin-table th{background:var(--soft); color:var(--muted); font-weight:600}
 .admin-table .col-title{font-weight:600}
-.admin-table .col-actions{white-space:nowrap; display:flex; gap:6px}
+/* td 에 display:flex 를 주면 table-cell 이 아니게 되어 행 높이 맞춤에서 빠지고
+   border-bottom 이 다른 셀과 어긋난다. 셀은 그대로 두고 inline 요소로 배치한다. */
+.admin-table .col-actions{white-space:nowrap}
+.admin-table .col-actions .btn{vertical-align:middle}
+.admin-table .col-actions form{margin-left:6px}
 .badge{display:inline-block; padding:2px 9px; border-radius:999px; font-size:.75rem; font-weight:700}
 .badge-pub{background:#e4f5ec; color:#1b8a54}
 .badge-draft{background:#eef0f4; color:#788196}

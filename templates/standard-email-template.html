@@ -1,0 +1,269 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>메일 제목을 여기에 적습니다</title>
+
+<!--
+================================================================================
+ 메일링크 표준 이메일 템플릿
+================================================================================
+
+ 이 파일은 템플릿이면서 작성 가이드입니다. HTML 주석으로 "왜 이렇게 하는지"를
+ 적어 두었으니, 필요한 곳을 바꿔 쓰신 뒤 발송 전에 주석을 지우셔도 됩니다.
+
+ 주석 안에 주석 종료 기호를 쓰면 안 됩니다. HTML 주석은 중첩되지 않아
+ 그 지점에서 주석이 끝나고, 뒤의 설명 문구가 메일 본문에 그대로 노출됩니다.
+
+ [바꿔야 하는 곳]  주석에 (교체) 라고 표시했습니다.
+   - 브랜드명, 로고 이미지 URL
+   - 대표 이미지 URL 과 alt
+   - 제목, 본문, 버튼 문구와 링크
+   - 푸터의 회사 정보와 수신거부 링크
+
+ [지켜야 하는 것]
+   1. 레이아웃은 table 로만 짭니다. Outlook 은 워드 엔진이라 div/flex/grid 가
+      제대로 동작하지 않고, 네이버·다음은 본문을 자기 페이지에 끼워 넣으며
+      문서 구조를 손봅니다.
+   2. CSS 는 전부 인라인 style 속성으로 넣습니다. 외부 CSS(<link>)는
+      불러오지 않아 스타일이 통째로 빠집니다.
+   3. 단위는 px 만 씁니다. rem/em/vw 는 기준값이 클라이언트마다 다릅니다.
+   4. 이미지는 https 절대 URL 로 불러옵니다. data: 인라인 이미지는
+      Gmail·Outlook 이 차단합니다.
+   5. 모든 이미지에 alt 를 넣습니다. 이미지는 차단될 수 있다고 전제하고,
+      차단돼도 메시지가 전달되게 만듭니다.
+   6. 텍스트와 이미지의 균형은 대략 6:4 입니다. 본문을 이미지 한 장으로
+      채우면 필터가 읽을 내용이 없어 강한 감점을 받습니다.
+
+ [넣지 말아야 하는 것]
+   <script> <iframe> <form> <input> <embed> <object> <video> <audio>
+   <base> <link rel="stylesheet"> <meta http-equiv="refresh">
+   이미지 맵(usemap), background-image 단독 사용, 웹폰트 의존,
+   본문과 다른 내용을 숨긴 텍스트
+
+ [발송 전 확인]
+   - 전체 용량 102KB 미만인가 (Gmail 이 초과분을 잘라냅니다)
+   - 모든 링크가 https 이고 표시 문구와 실제 주소가 같은가
+   - 플레인 텍스트 버전을 함께 보내는가 (파일 맨 아래 참고)
+   - SPF·DKIM·DMARC 가 설정돼 있는가
+   - 광고성 메일이라면 제목 맨 앞에 (광고) 를 붙였는가
+
+ 참고 : https://tech.maillink.co.kr/posts/email-html-antipatterns
+        https://tech.maillink.co.kr/posts/image-only-email-spam
+================================================================================
+-->
+
+<!--
+  아래 <style> 은 모바일에서만 적용되는 보조 장치입니다.
+  @media 를 무시하는 클라이언트가 있으므로, 이 블록이 통째로 빠져도
+  메일을 읽는 데 지장이 없도록 설계했습니다. 중요한 스타일은 전부 인라인에 있습니다.
+-->
+<style type="text/css">
+  @media only screen and (max-width: 600px) {
+    .m-full   { width: 100% !important; }
+    .m-pad    { padding-left: 20px !important; padding-right: 20px !important; }
+    .m-h1     { font-size: 22px !important; line-height: 30px !important; }
+  }
+</style>
+</head>
+
+<body style="margin:0; padding:0; background-color:#f4f5f7;">
+
+<!--
+  프리헤더 : 받은편지함 목록에서 제목 옆(또는 아래)에 보이는 미리보기 문구입니다.
+  본문에서 감추는 것이 표준 방식이며 필터도 이 패턴 자체는 문제 삼지 않습니다.
+  다만 제목을 보완하는 짧은 한 문장만 넣으세요. 공백 문자를 수백 개 채우거나
+  본문과 무관한 키워드를 숨기면 그 순간 '숨김 텍스트'가 되어 감점 요인이 됩니다.
+  (교체)
+-->
+<div style="display:none; font-size:0; line-height:0; max-height:0; mso-hide:all; overflow:hidden;">
+  제목을 보완하는 한 문장을 여기에 적습니다.
+</div>
+
+<!-- 바깥 테이블 : 배경색을 화면 전체로 채웁니다 -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f4f5f7">
+  <tr>
+    <td align="center" style="padding-top:24px; padding-bottom:24px;">
+
+      <!--
+        본문 테이블 : 폭은 600px 로 고정합니다. 600~640px 이 사실상 표준이고,
+        이보다 넓으면 데스크톱 미리보기 창에서 잘립니다.
+        가운데 정렬은 margin:0 auto 가 아니라 위 td 의 align="center" 로 합니다.
+        Outlook 이 단축 속성을 제대로 해석하지 못하는 경우가 있습니다.
+      -->
+      <table role="presentation" class="m-full" width="600" cellpadding="0" cellspacing="0" border="0"
+             bgcolor="#ffffff" style="width:600px; max-width:600px; background-color:#ffffff;">
+
+        <!-- ── 헤더 ──────────────────────────────────────────────────────
+             로고는 이미지지만, 차단될 것을 전제로 alt 에 브랜드명을 넣습니다.
+             (교체) 로고 URL, alt, 링크 주소
+        -->
+        <tr>
+          <td class="m-pad" align="left" style="padding:24px 32px 8px 32px;">
+            <a href="https://www.maillink.co.kr" style="text-decoration:none;">
+              <img src="https://tech.maillink.co.kr/static/img/logo-512.png"
+                   width="40" height="40" alt="메일링크"
+                   style="display:block; border:0; width:40px; height:40px;" />
+            </a>
+          </td>
+        </tr>
+
+        <!-- ── 대표 이미지 ───────────────────────────────────────────────
+             이미지는 한 장이면 충분합니다. 반드시 지켜야 할 것 세 가지입니다.
+               1) width 속성을 숫자로 지정 (Outlook 이 style 만으로는 크기를 못 잡습니다)
+               2) style 에 max-width:100%; height:auto 로 모바일 대응
+               3) display:block 으로 이미지 아래 생기는 여백 제거
+             alt 는 장식이 아니라 내용 설명으로 채웁니다. 이미지가 차단되면
+             이 문구가 그 자리에 남아 메시지를 대신 전달합니다. (교체)
+        -->
+        <tr>
+          <td align="center" style="padding:8px 0 0 0;">
+            <img src="https://example.com/images/hero.png"
+                 width="600" alt="이미지가 전하려는 내용을 문장으로 적습니다"
+                 style="display:block; border:0; width:100%; max-width:600px; height:auto;" />
+          </td>
+        </tr>
+
+        <!-- ── 본문 ─────────────────────────────────────────────────────
+             제목과 본문은 반드시 '진짜 텍스트' 로 넣습니다. 이미지에 글자를
+             얹어 보내면 필터가 읽을 내용이 없어 스팸 점수가 올라가고,
+             이미지가 차단된 수신자에게는 빈 화면만 남습니다.
+
+             글꼴은 웹폰트를 쓰지 않고 대체 목록으로 지정합니다.
+             p 와 h1 의 기본 여백은 클라이언트마다 다르므로 margin 을 직접 씁니다.
+             (교체) 제목과 본문
+        -->
+        <tr>
+          <td class="m-pad" align="left" style="padding:28px 32px 0 32px;">
+            <h1 class="m-h1" style="margin:0 0 16px 0; font-family:'Malgun Gothic','맑은 고딕','Apple SD Gothic Neo',AppleSDGothicNeo-Regular,sans-serif; font-size:26px; line-height:36px; color:#1a1f2b; font-weight:bold;">
+              메일의 핵심 메시지를 한 줄로
+            </h1>
+
+            <p style="margin:0 0 14px 0; font-family:'Malgun Gothic','맑은 고딕','Apple SD Gothic Neo',AppleSDGothicNeo-Regular,sans-serif; font-size:15px; line-height:25px; color:#3c4657;">
+              첫 문단에서 이 메일이 무엇에 대한 것인지 바로 밝힙니다. 수신자는
+              제목과 첫 두 줄만 보고 계속 읽을지 결정합니다.
+            </p>
+
+            <p style="margin:0 0 14px 0; font-family:'Malgun Gothic','맑은 고딕','Apple SD Gothic Neo',AppleSDGothicNeo-Regular,sans-serif; font-size:15px; line-height:25px; color:#3c4657;">
+              이어지는 문단에서 필요한 내용을 설명합니다. 한 문단은 서너 줄을
+              넘기지 않는 편이 모바일에서 읽기 좋습니다. 강조가 필요하면
+              <strong style="color:#1a1f2b;">strong</strong> 을 씁니다.
+            </p>
+
+            <!--
+              목록을 쓸 때 들여쓰기 폭은 클라이언트마다 다릅니다.
+              칸이 정확히 맞아야 하는 내용이라면 목록 대신 표를 쓰세요.
+            -->
+            <ul style="margin:0 0 14px 0; padding-left:20px; font-family:'Malgun Gothic','맑은 고딕','Apple SD Gothic Neo',AppleSDGothicNeo-Regular,sans-serif; font-size:15px; line-height:25px; color:#3c4657;">
+              <li style="margin-bottom:6px;">전달할 내용을 항목으로 나눌 때 씁니다</li>
+              <li style="margin-bottom:6px;">항목은 짧게 끊어 적습니다</li>
+            </ul>
+          </td>
+        </tr>
+
+        <!-- ── 버튼 ─────────────────────────────────────────────────────
+             form 과 button 은 쓰지 않습니다. Gmail 이 제거하고, 남아 있어도
+             제출되지 않는 환경이 많아 눌러도 반응 없는 폼이 됩니다.
+             링크(<a>)에 padding 과 배경색을 준 것이 가장 안정적입니다.
+
+             bgcolor 를 td 에도 넣은 이유는, 배경색을 못 읽는 클라이언트에서
+             글자만 남아 흰 바탕에 흰 글씨가 되는 것을 막기 위해서입니다.
+             (교체) 버튼 문구와 링크
+        -->
+        <tr>
+          <td class="m-pad" align="left" style="padding:10px 32px 4px 32px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td align="center" bgcolor="#2f6fed" style="background-color:#2f6fed; border-radius:6px;">
+                  <a href="https://example.com/landing"
+                     style="display:inline-block; padding:13px 26px; font-family:'Malgun Gothic','맑은 고딕','Apple SD Gothic Neo',AppleSDGothicNeo-Regular,sans-serif; font-size:15px; line-height:20px; color:#ffffff; text-decoration:none; font-weight:bold;">
+                    자세히 보기
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!--
+          구분선 : hr 은 클라이언트마다 두께와 색이 달라집니다.
+          높이 1px 짜리 td 에 배경색을 주는 편이 예측 가능합니다.
+        -->
+        <tr>
+          <td class="m-pad" style="padding:28px 32px 0 32px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr><td height="1" bgcolor="#e6e9ef" style="height:1px; line-height:1px; font-size:0;">&nbsp;</td></tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- ── 푸터 ─────────────────────────────────────────────────────
+             수신거부 방법을 본문에 밝히는 것은 정보통신망법상 의무입니다.
+             광고성 메일이라면 제목 맨 앞에 (광고) 도 함께 표기해야 합니다.
+
+             Gmail·Yahoo 는 대량 발송자에게 원클릭 수신거부(RFC 8058)를
+             요구합니다. 이는 본문 링크가 아니라 List-Unsubscribe 와
+             List-Unsubscribe-Post '헤더' 로 설정하는 항목이며, 메일링크
+             발송 설정에서 처리합니다. 본문 링크는 그와 별개로 필요합니다.
+             (교체) 회사 정보와 수신거부 링크
+        -->
+        <tr>
+          <td class="m-pad" align="left" style="padding:18px 32px 30px 32px;">
+            <p style="margin:0 0 8px 0; font-family:'Malgun Gothic','맑은 고딕','Apple SD Gothic Neo',AppleSDGothicNeo-Regular,sans-serif; font-size:12px; line-height:19px; color:#6b7688;">
+              (주)회사명 &nbsp;|&nbsp; 대표 홍길동 &nbsp;|&nbsp; 사업자등록번호 000-00-00000<br />
+              서울특별시 ○○구 ○○로 00, 0층 &nbsp;|&nbsp; 문의 help@example.com
+            </p>
+            <p style="margin:0; font-family:'Malgun Gothic','맑은 고딕','Apple SD Gothic Neo',AppleSDGothicNeo-Regular,sans-serif; font-size:12px; line-height:19px; color:#6b7688;">
+              이 메일은 수신에 동의하신 분께 발송되었습니다.
+              더 이상 받고 싶지 않으시면
+              <a href="https://example.com/unsubscribe?id=RECIPIENT_ID"
+                 style="color:#2f6fed; text-decoration:underline;">수신거부</a>
+              를 눌러 주세요.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+      <!-- /본문 테이블 -->
+
+    </td>
+  </tr>
+</table>
+
+<!--
+================================================================================
+ 플레인 텍스트 버전
+
+ HTML 만 보내지 말고 아래와 같은 텍스트 버전을 함께 보내세요
+ (multipart/alternative). 도달률이 올라가고, 텍스트만 읽는 환경에서도
+ 내용이 전달됩니다. HTML 본문과 같은 내용이어야 합니다.
+ 서로 다른 내용을 넣으면 필터가 숨김 텍스트로 의심합니다.
+
+ ---- 여기부터 ----
+
+ [메일의 핵심 메시지를 한 줄로]
+
+ 첫 문단에서 이 메일이 무엇에 대한 것인지 바로 밝힙니다.
+ 수신자는 제목과 첫 두 줄만 보고 계속 읽을지 결정합니다.
+
+ 이어지는 문단에서 필요한 내용을 설명합니다.
+
+ - 전달할 내용을 항목으로 나눌 때 씁니다
+ - 항목은 짧게 끊어 적습니다
+
+ 자세히 보기: https://example.com/landing
+
+ ------------------------------------------------------------
+ (주)회사명 | 대표 홍길동 | 사업자등록번호 000-00-00000
+ 서울특별시 ○○구 ○○로 00, 0층 | 문의 help@example.com
+
+ 이 메일은 수신에 동의하신 분께 발송되었습니다.
+ 수신거부: https://example.com/unsubscribe?id=RECIPIENT_ID
+
+ ---- 여기까지 ----
+================================================================================
+-->
+
+</body>
+</html>

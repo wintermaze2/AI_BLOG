@@ -56,6 +56,9 @@ blog/
 ├── SEO.md                      # 검색엔진 등록 절차
 ├── CHANGELOG.md                # 변경 이력
 ├── sql/schema.sql              # 스키마 + 카테고리 초기 데이터
+├── contents/                   # 블로그 본문 원고(HTML 조각) + guide.txt 작성 지침
+├── templates/                  # 고객 배포용 산출물. 블로그와 무관하며 배포되지 않음
+│   └── standard-email-template.html   # 표준 이메일 템플릿 겸 작성 가이드
 ├── deploy 관련은 서버 ~/deploy.sh
 └── src/main/
     ├── java/com/example/blog/

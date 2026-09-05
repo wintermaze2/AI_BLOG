@@ -1,0 +1,192 @@
+<style>
+.post-body .note{
+  border-left:3px solid var(--accent);
+  background:var(--soft);
+  padding:16px 18px;
+  margin:0 0 20px;
+}
+.post-body .note > :last-child{margin-bottom:0}
+.post-body .note-title{display:block;font-weight:700;margin-bottom:8px}
+</style>
+
+<p>Gmail이나 Yahoo, Outlook에서 발신자 이름 옆에 뜨는 <strong>[수신거부]</strong> 버튼을 보신 적이 있을 겁니다. 이 버튼은 메일 본문의 링크가 아니라 <code>List-Unsubscribe</code>라는 헤더에서 나옵니다. 2024년부터 대량 발송자에게는 이 헤더가 사실상 의무가 되었고, 갖추지 않으면 메일이 아예 거부됩니다. 이 글에서는 이 헤더가 무엇이고, 왜 지금 중요해졌으며, 어떻게 구현하고, 수신 서버가 무엇을 보고 판단하는지까지 정리합니다.</p>
+
+<h2>List-Unsubscribe란 무엇인가</h2>
+
+<p><code>List-Unsubscribe</code>는 <strong>"이 메일의 수신을 끊으려면 여기로 요청하라"</strong>는 주소를 메일 헤더에 적어두는 규칙입니다. 사람이 읽는 본문이 아니라 기계가 읽는 자리에 있다는 점이 핵심입니다. 덕분에 메일 클라이언트는 본문을 해석하지 않고도 수신거부 수단을 찾아낼 수 있습니다. 이 헤더가 하는 일은 <strong>수단을 기계가 읽을 수 있게 알려주는 것까지</strong>이고, 그것을 버튼으로 만들어 보여줄지는 받는 쪽이 정합니다.</p>
+
+<p>생각보다 오래된 규격입니다. <strong>1998년 RFC 2369</strong>에서 처음 정의되었습니다. 당시는 메일링 리스트 프로그램이 유행하던 시절이었고, 이 문서는 <code>List-Help</code>, <code>List-Subscribe</code>, <code>List-Post</code> 등 여러 헤더를 함께 정의했습니다. 그중 오늘날까지 실질적으로 살아남아 널리 쓰이는 것이 <code>List-Unsubscribe</code> 하나입니다.</p>
+
+<p>초기 형태는 단순했습니다. 꺾쇠괄호로 감싼 URL을 적어두는 것이 전부였습니다.</p>
+
+<pre><code>List-Unsubscribe: &lt;https://example.com/unsub?id=abc123&gt;, &lt;mailto:unsub@example.com?subject=abc123&gt;</code></pre>
+
+<p>그런데 이 방식에는 결함이 있었습니다. 메일 클라이언트가 이 URL을 <strong>대신 눌러줄 수가 없었다</strong>는 점입니다. 링크를 그냥 열어보는(GET) 동작은 위험했습니다. 보안 제품이나 링크 미리보기 기능이 메일 안의 URL을 자동으로 훑고 다니는데, 그 과정에서 <strong>사용자가 원한 적 없는 수신거부가 실행</strong>될 수 있었기 때문입니다. 그래서 클라이언트는 "정말 수신거부하시겠습니까?" 같은 확인 창을 띄우거나, 사용자를 웹페이지로 보내 다시 버튼을 누르게 하는 수밖에 없었습니다.</p>
+
+<h3>RFC 8058: 진짜 원클릭이 되다</h3>
+
+<p>이 문제를 해결한 것이 <strong>2018년 1월 RFC 8058</strong>입니다. 아이디어는 간단합니다. 헤더를 하나 더 추가해서 <strong>"이 주소는 POST로 요청하면 바로 처리되는 원클릭 엔드포인트다"</strong>라고 명시적으로 선언하게 한 것입니다.</p>
+
+<pre><code>List-Unsubscribe-Post: List-Unsubscribe=One-Click</code></pre>
+
+<p>이 한 줄이 붙으면 메일 클라이언트는 사용자가 버튼을 누른 순간 확인 창 없이 POST 요청을 보냅니다. 링크를 훑고 다니는 스캐너는 GET만 하므로 실수로 해지될 위험이 사라집니다. <strong>의도적인 POST만 수신거부로 인정</strong>하는 구조로 문제를 푼 것입니다.</p>
+
+<h2>왜 지금 중요해졌나</h2>
+
+<p>1998년에 생긴 헤더가 20년 넘게 선택 사항이었다가 갑자기 필수가 된 이유는 <strong>2024년 Gmail과 Yahoo가 대량 발송자 요건을 발표</strong>했기 때문입니다. Gmail 기준으로 개인 계정에 하루 5,000통 이상 보내는 발송자는 다음을 지켜야 합니다.</p>
+
+<ul>
+  <li><a href="/posts/about-spf">SPF</a>·<a href="/posts/about-dkim">DKIM</a>·<a href="/posts/about-dmarc">DMARC</a> 인증 설정 (DMARC는 최소 <code>p=none</code>)</li>
+  <li><strong>원클릭 수신거부(RFC 8058)</strong> 제공, 요청은 <strong>2일 이내 처리</strong></li>
+  <li>스팸 신고율 0.3% 미만 유지 (권장은 0.1% 이하)</li>
+  <li>발송 IP의 정·역방향 DNS 일치, TLS 전송, RFC 5322 형식 준수</li>
+</ul>
+
+<p>이후 Microsoft도 Outlook.com 계열에 유사한 요건을 도입했습니다. 즉 주요 해외 메일 사업자가 사실상 같은 기준으로 수렴한 상황입니다.</p>
+
+<h3>발신자에게는 수신거부가 스팸 신고보다 낫습니다</h3>
+
+<p>수신자 입장에서 <strong>[수신거부]</strong>와 <strong>[스팸 신고]</strong>는 목적이 같은 버튼입니다. "이 메일 그만 받고 싶다"는 것이죠. 그런데 <strong>발신자 입장에서 두 결과는 전혀 다릅니다.</strong></p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th></th><th>수신거부</th><th>스팸 신고</th></tr></thead>
+  <tbody>
+    <tr><td>결과</td><td>주소 하나가 목록에서 빠집니다.</td><td>주소가 빠지는 것에 더해 <strong>도메인 평판이 깎입니다.</strong></td></tr>
+    <tr><td>측정 지표</td><td>따로 관리되는 기준선이 없습니다.</td><td>Gmail이 <strong>0.3%</strong>라는 기준선을 두고 Postmaster Tools로 수치를 공개합니다.</td></tr>
+    <tr><td>영향 범위</td><td>그 수신자 한 명</td><td>그 도메인에서 나가는 <em>모든</em> 메일의 도달률</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>같은 "그만 받겠다"인데 한쪽만 비용이 청구되는 구조입니다. 평판이 도달률로 이어지는 과정은 <a href="/posts/spf-dkim-dmarc-spam">인증을 다 통과해도 스팸으로 분류되는 이유</a>에서 자세히 다루고 있습니다.</p>
+
+<p>그래서 수신거부를 어렵게 만들어 구독자를 붙잡는 것은 계산이 맞지 않습니다. 떠나기로 마음먹은 사람에게 <strong>편한 출구를 주는 편이 발신자에게 유리합니다.</strong> 출구가 잘 보이지 않을 때 수신자에게 남는 선택지는 스팸 신고 버튼이기 때문입니다.</p>
+
+<div class="note">
+  <span class="note-title">국내법은 별도로 챙겨야 합니다</span>
+  <p>정보통신망법은 광고성 정보를 보낼 때 <strong>제목에 "(광고)" 표기</strong>, <strong>본문에 수신거부 방법 명시</strong>, <strong>수신거부에 비용을 부담시키지 않을 것</strong>을 요구합니다. 여기서 요구하는 것은 <strong>본문</strong> 표기이고, <code>List-Unsubscribe</code> 헤더는 이를 대체하지 않습니다. 헤더는 Gmail 등 해외 사업자의 기술 요건이고 본문 안내는 국내 법적 의무이므로, <strong>둘 다 넣어야</strong> 합니다. 어느 한쪽만으로는 부족합니다.</p>
+</div>
+
+<h2>정확한 구현 방식</h2>
+
+<p>발송하는 메일에 아래 두 헤더를 함께 넣습니다.</p>
+
+<pre><code>List-Unsubscribe: &lt;https://example.com/u/9f2c1ab7e40d&gt;
+List-Unsubscribe-Post: List-Unsubscribe=One-Click</code></pre>
+
+<p>지켜야 할 규칙은 다음과 같습니다.</p>
+
+<div class="table-wrap">
+<table class="table-wide">
+  <thead><tr><th>항목</th><th>규칙</th><th>이유</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>URL 형식</td>
+      <td>각 주소를 <code>&lt;</code> <code>&gt;</code>로 감싸고 쉼표로 구분합니다.</td>
+      <td>RFC 2369가 정한 문법입니다. 꺾쇠를 빠뜨리면 파싱에 실패합니다.</td>
+    </tr>
+    <tr>
+      <td>프로토콜</td>
+      <td>원클릭 대상은 반드시 <strong>HTTPS</strong>여야 합니다.</td>
+      <td>평문 HTTP는 원클릭 대상으로 인정되지 않습니다.</td>
+    </tr>
+    <tr>
+      <td>수신자 식별</td>
+      <td>URL에 <strong>수신자마다 다른 식별자</strong>를 넣습니다.</td>
+      <td>POST 본문에는 누가 눌렀는지가 없습니다. URL만으로 특정돼야 합니다.</td>
+    </tr>
+    <tr>
+      <td>추측 방지</td>
+      <td>식별자는 순번이 아니라 <strong>추측 불가능한 임의값</strong>이어야 합니다.</td>
+      <td><code>?id=1001</code> 같은 형태면 남의 수신을 임의로 끊을 수 있습니다.</td>
+    </tr>
+    <tr>
+      <td>헤더 값</td>
+      <td><code>List-Unsubscribe-Post</code>의 값은 <code>List-Unsubscribe=One-Click</code> 고정입니다.</td>
+      <td>규격에 정해진 문자열이라 변형하면 인식되지 않습니다.</td>
+    </tr>
+    <tr>
+      <td>DKIM 서명</td>
+      <td>두 헤더가 <strong>DKIM 서명 범위에 포함</strong>돼야 합니다.</td>
+      <td>가장 흔히 놓치는 조건입니다. 아래에서 자세히 봅니다.</td>
+    </tr>
+    <tr>
+      <td>mailto 병기</td>
+      <td><strong>선택 사항입니다.</strong> HTTPS 주소만으로 요건이 충족됩니다.</td>
+      <td>원클릭 버튼을 노출하는 주요 사업자는 모두 HTTPS 방식을 씁니다. <code>mailto:</code>는 구형 클라이언트용 보조 수단일 뿐입니다.</td>
+    </tr>
+  </tbody>
+</table>
+<p class="scroll-hint">← 표를 좌우로 밀어서 보실 수 있습니다.</p>
+</div>
+
+<h3>DKIM 서명에 두 헤더를 포함시키기</h3>
+
+<p>이것이 실무에서 가장 자주 실패하는 지점입니다. <a href="/posts/about-dkim">DKIM</a> 서명은 <strong>서명할 헤더 목록을 <code>h=</code> 태그에 나열</strong>하는데, 많은 발송 설정이 기본값으로 <code>From</code>, <code>To</code>, <code>Subject</code>, <code>Date</code> 정도만 서명합니다. 그러면 <code>List-Unsubscribe</code>는 서명되지 않은 상태로 나갑니다.</p>
+
+<pre><code>DKIM-Signature: v=1; a=rsa-sha256; d=example.com; s=sel1;
+    h=from:to:subject:date:list-unsubscribe:list-unsubscribe-post;
+    b=...</code></pre>
+
+<p><code>h=</code> 목록에 <code>list-unsubscribe</code>와 <code>list-unsubscribe-post</code>가 들어가야 합니다. 서명되지 않았다면 수신 서버는 이 헤더를 <strong>중간에서 누군가 끼워 넣었을 수 있는 값</strong>으로 취급하고 무시합니다. 내가 보낸 메일의 실제 헤더를 확인하는 방법은 <a href="/posts/email-header-analysis">이메일 헤더 분석하기</a>에 정리돼 있습니다.</p>
+
+<h3>수신거부 요청을 받는 서버 쪽</h3>
+
+<p>사용자가 버튼을 누르면 서버로 이런 요청이 들어옵니다.</p>
+
+<pre><code>POST /u/9f2c1ab7e40d HTTP/1.1
+Host: example.com
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 26
+
+List-Unsubscribe=One-Click</code></pre>
+
+<p>받는 쪽에서 지켜야 할 것은 세 가지입니다.</p>
+
+<ul>
+  <li><strong>확인 절차를 두지 마세요.</strong> 로그인 요구, 확인 화면, "정말 해지하시겠습니까" 같은 재확인은 모두 위반입니다. 이 POST 한 번이 최종 의사입니다.</li>
+  <li><strong>2xx로 응답하세요.</strong> 응답 본문은 사용자에게 보이지 않는 것이 보통이므로 내용은 중요하지 않습니다. 다만 오류 코드를 돌려주면 처리 실패로 간주됩니다.</li>
+  <li><strong>2일 이내에 실제로 반영하세요.</strong> 응답만 성공으로 주고 주소록에서 빼지 않으면 요건 위반입니다. 다음 발송에서 그대로 나가면 그 사람은 이번엔 스팸 신고를 누릅니다.</li>
+</ul>
+
+<h2>수신 서버는 무엇을 보고 판단하나</h2>
+
+<p>메일 사업자는 받은 메일에 수신거부 UI를 붙일지 말지를 스스로 결정합니다. 아래는 그 판단에 들어가는 항목들이며, <strong>하나라도 걸리면 버튼은 나타나지 않습니다.</strong> 다만 반대는 성립하지 않습니다. 전부 통과해도 노출이 보장되지는 않습니다.</p>
+
+<ol>
+  <li><strong>헤더가 존재하고 문법이 맞는가</strong> — <code>List-Unsubscribe</code>에 HTTPS 주소가 꺾쇠 안에 들어 있고, <code>List-Unsubscribe-Post</code> 값이 정확히 <code>List-Unsubscribe=One-Click</code>인지 봅니다.</li>
+  <li><strong>DKIM 서명이 유효한가</strong> — 서명 자체가 검증되어야 합니다.</li>
+  <li><strong>두 헤더가 그 서명에 덮여 있는가</strong> — <code>h=</code> 목록에 포함되었는지 확인합니다. 앞서 말한 그 조건입니다.</li>
+  <li><strong>서명 도메인이 발신 도메인과 정렬되는가</strong> — DKIM의 <code>d=</code> 도메인이 <code>From</code> 도메인과 맞아야 합니다. <a href="/posts/about-dmarc">DMARC</a>가 요구하는 정렬과 같은 개념입니다.</li>
+  <li><strong>대량 발송으로 분류되는가</strong> — 여기서부터는 규격이 아니라 사업자의 재량입니다. 발송량, 누적 이력, 도메인 평판, 그리고 이 메일이 개인 간 메일처럼 보이는지를 함께 봅니다.</li>
+</ol>
+
+<p>앞의 1~4번은 <strong>규격이 정한 필요조건</strong>이고, 5번은 사업자마다 다른 <strong>재량 영역</strong>입니다. 그래서 같은 메일이 어떤 사업자에서는 버튼이 뜨고 다른 곳에서는 뜨지 않는 일이 생깁니다. 노출이 됐을 때 사용자가 버튼을 누르면 <strong>브라우저가 아니라 메일 사업자의 서버가 대신 POST를 보냅니다.</strong> 그래서 수신거부 엔드포인트에는 사용자의 IP가 아니라 사업자 인프라의 IP로 요청이 들어옵니다. 접근 제어를 걸어두었다면 이 요청이 막히지 않는지 확인해야 합니다.</p>
+
+<div class="note">
+  <span class="note-title">본문 링크도 여전히 필요합니다</span>
+  <p>헤더 방식은 클라이언트가 지원할 때만 동작합니다. 웹메일마다 지원 범위가 다르고, 사내 메일 시스템은 대부분 지원하지 않습니다. 게다가 앞서 본 대로 국내법은 <strong>본문</strong> 표기를 요구합니다. 헤더는 본문 링크를 대체하는 것이 아니라 <strong>보완하는 것</strong>입니다. 본문 수신거부 링크를 눈에 잘 띄게 두는 것은 여전히 기본이며, 이는 <a href="/posts/image-only-email-spam">이미지로만 만든 메일</a>이 위험한 이유이기도 합니다. 본문이 이미지 한 장이면 이미지를 차단한 사람에게는 수신거부 링크가 아예 보이지 않습니다.</p>
+</div>
+
+<h2>메일링크는 이 표준을 그대로 구현합니다</h2>
+
+<p>메일링크로 발송하는 메일에는 <strong>RFC 8058 원클릭 수신거부가 규격 그대로 적용</strong>됩니다. 발송자가 헤더를 직접 구성하거나 별도로 설정할 필요 없이, 발송 시점에 아래 항목이 모두 갖춰집니다.</p>
+
+<ul>
+  <li><strong>두 헤더를 함께 넣습니다.</strong> <code>List-Unsubscribe</code>에 HTTPS 주소가, <code>List-Unsubscribe-Post</code>에 규격대로의 값이 들어갑니다. 원클릭 요건이 요구하는 형태 그대로입니다.</li>
+  <li><strong>수신거부 주소는 수신자마다 다릅니다.</strong> 추측할 수 없는 값이 들어가므로 누른 사람만 정확히 처리되고, 타인의 주소를 임의로 해지시킬 수 없습니다.</li>
+  <li><strong>두 헤더가 DKIM 서명 범위에 포함됩니다.</strong> <code>h=</code> 태그에 <code>list-unsubscribe</code>와 <code>list-unsubscribe-post</code>가 함께 들어가므로, 수신 서버가 이 헤더를 인증된 값으로 취급합니다.</li>
+  <li><strong>요청은 확인 절차 없이 즉시 반영됩니다.</strong> 처리 결과가 주소록에 바로 반영되어 다음 발송부터 제외되므로, 2일 이내 처리 요건을 넉넉히 만족합니다.</li>
+</ul>
+
+<div class="cta">
+  <p class="cta-copy">이메일, 문자, FAX, 카카오 비즈메시지를 한 번에</p>
+  <a class="cta-btn" href="https://www.maillink.co.kr?r=tech">
+    메일링크 바로가기
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="square" aria-hidden="true">
+      <path d="M5 12h14M13 6l6 6-6 6"/>
+    </svg>
+  </a>
+</div>

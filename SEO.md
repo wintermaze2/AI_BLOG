@@ -24,7 +24,7 @@ DNS 설정 글의 슬러그가 `hot-to-set-dns` 오타로 등록되어 있었습
 
 ### (2) 카테고리
 
-`2026-08-28` 기준으로 아래 네 개를 씁니다. 관리자 화면에 카테고리를 만드는
+`2026-09-18` 기준으로 아래 다섯 개를 씁니다. 관리자 화면에 카테고리를 만드는
 기능이 없으므로, 추가·변경은 [sql/schema.sql](sql/schema.sql) 의
 "카테고리 초기 데이터" 블록을 고치고 DB에 직접 반영합니다.
 
@@ -33,7 +33,8 @@ DNS 설정 글의 슬러그가 `hot-to-set-dns` 오타로 등록되어 있었습
 | 이메일 인증 | `email-auth` | `/category/email-auth` |
 | 이메일 작성팁 | `sending-tips` | `/category/sending-tips` |
 | 이메일 보안 | `email-security` | `/category/email-security` |
-| 문자보안 | `sms-security` | `/category/sms-security` |
+| 문자 보안 | `sms-security` | `/category/sms-security` |
+| 문자 작성팁 | `sms-tips` | `/category/sms-tips` |
 
 기본 카테고리 `개발`(dev) / `일상`(life) 은 이 블로그 주제와 맞지 않아 삭제했습니다.
 
